@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@google-cloud/storage": "^5.18.2",
+    "@google-cloud/vision": "^2.4.2",
+    "body-parser": "^1.19.2",
+    "cors": "^2.8.5",
+    "express": "^4.17.3"
+  },
+  "scripts": {
+    "start": "nodemon server.js"
+  },
+  "name": "image-to-text-api",
+  "version": "1.0.0",
+  "main": "server.js",
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}
