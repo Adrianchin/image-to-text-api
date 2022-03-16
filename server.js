@@ -82,7 +82,7 @@ app.post("/textfortranslation", (req, resp) => {
             })
         })
         textFromDeepL = await response.json();
-        console.log(textFromDeepL);
+        console.log("This is the text returned from DeepL", textFromDeepL);
 
         resp.json(textFromDeepL);
 
