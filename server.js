@@ -1,6 +1,15 @@
 const express = require('express');
 const cors = require ('cors');
+//Note: node-fetch is only available with import... so this is a workaround
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const app = express();
+
+
+/*Note: When using modules, if you get ReferenceError: require is not defined, 
+you'll need to use the import syntax instead of require. 
+You can't natively mix and match between them, 
+so you'll need to pick one or use a bundler if you need to use both.
+*/
 
 app.use(cors());
 //Should use express.json() instead of the old way bodyParser, express already has this built in!
@@ -48,4 +57,39 @@ app.post('/image', (req, resp) => {
         }
     }
     setEndpoint();
+})
+
+app.post("/textfortranslation", (req, resp) => {
+
+    const textFromImage = req.body.textFromImage;
+
+    console.log("This is the text from the Image", textFromImage);
+
+    var textFromDeepL;
+
+    async function fetchTranslationInfo() {
+        try{
+        const response = await fetch('https://api-free.deepl.com/v2/translate', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': '*/*'
+            },
+            body: new URLSearchParams({
+                target_lang: 'EN',
+                auth_key: 'ddec143e-2630-2a52-13fc-191f9cd1a070:fx',
+                text: textFromImage
+            })
+        })
+        textFromDeepL = await response.json();
+        console.log(textFromDeepL);
+
+        resp.json(textFromDeepL);
+
+        } catch(error){
+            resp.status(400).json(`problem with the API`);
+            console.log(error);
+        }
+    }
+    fetchTranslationInfo()
 })
