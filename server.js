@@ -3,7 +3,11 @@ const cors = require ('cors');
 //Note: node-fetch is only available with import... so this is a workaround
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 const app = express();
+const fs = require ('fs');
+const vision = require('@google-cloud/vision');
 
+//for encoding
+var imageFile = fs.readFileSync('../Test-Files/Onigiri.ARW');
 
 /*Note: When using modules, if you get ReferenceError: require is not defined, 
 you'll need to use the import syntax instead of require. 
@@ -23,6 +27,40 @@ app.post('/hello', (req, resp) => {
     resp.send('Hello');
 })
 
+//defines internal file
+var imageB64 = Buffer.from(imageFile).toString('base64');
+//console.log(imageB64);
+
+app.post('/localimage', (req, resp) => {
+
+    const link = req.body.link;
+
+    console.log("Link is linkl from front end", link);
+    
+    // Creates a client
+    const client = new vision.ImageAnnotatorClient();
+
+    const request = {
+        image: {
+            content: Buffer.from(imageB64, 'base64')
+        }
+    };
+    
+    async function setEndpoint() {
+        try{
+            const [result] = await client.textDetection(request);
+            const detections = result.textAnnotations;
+            console.log('Text:');
+            detections.forEach(text => console.log(text));
+            resp.json(detections);
+        } catch(error) {
+            resp.status(400).json(`problem with the API`);
+            console.log(error);
+        }
+    }
+    setEndpoint();
+});
+
 //actual image post and resp - for image to text
 app.post('/image', (req, resp) => {
 // Imports the Google Cloud client library
@@ -32,9 +70,6 @@ app.post('/image', (req, resp) => {
     console.log("Link is linkl from front end", link);
 
     console.log("Req body is", req.body);
-
-    const vision = require('@google-cloud/vision');
-    const res = require('express/lib/response');
 
     async function setEndpoint() {
         // Specifies the location of the api endpoint
@@ -46,11 +81,11 @@ app.post('/image', (req, resp) => {
         // Performs text detection on the image file
         try{
             const [result] = await client.textDetection(`${link}`);
-            const labels = result.textAnnotations;
+            const detections = result.textAnnotations;
             console.log('Text:');
-            labels.forEach(label => console.log(label.description));
-            console.log(labels);
-            resp.json(labels);
+            detections.forEach(detections => console.log(detections.description));
+            console.log(detections);
+            resp.json(detections);
         } catch(error) {
             resp.status(400).json(`problem with the API`);
             console.log(error);
