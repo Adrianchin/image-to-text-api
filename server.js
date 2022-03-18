@@ -8,6 +8,9 @@ const vision = require('@google-cloud/vision');
 
 //for encoding
 var imageFile = fs.readFileSync('../Test-Files/Onigiri.ARW');
+//defines internal file
+var imageB64 = Buffer.from(imageFile).toString('base64');
+//console.log(imageB64);
 
 /*Note: When using modules, if you get ReferenceError: require is not defined, 
 you'll need to use the import syntax instead of require. 
@@ -22,16 +25,9 @@ app.use(express.json());
 app.listen(3000, ()=> {
     console.log('app is running on port 3000')
 })
-//test
-app.post('/hello', (req, resp) => {
-    resp.send('Hello');
-})
 
-//defines internal file
-var imageB64 = Buffer.from(imageFile).toString('base64');
-//console.log(imageB64);
-
-app.post('/localimage', (req, resp) => {
+//Call for local image files, pictures/photos
+app.post('/localimagephoto', (req, resp) => {
 
     const link = req.body.link;
 
@@ -61,8 +57,39 @@ app.post('/localimage', (req, resp) => {
     setEndpoint();
 });
 
-//actual image post and resp - for image to text
-app.post('/image', (req, resp) => {
+//Call for document type, writing. Text heavy pictures. Handwriting
+app.post('/localimagedocument', (req, resp) => {
+
+    const link = req.body.link;
+
+    console.log("Link is linkl from front end", link);
+    
+    // Creates a client
+    const client = new vision.ImageAnnotatorClient();
+
+    const request = {
+        image: {
+            content: Buffer.from(imageB64, 'base64')
+        }
+    };
+    
+    async function setEndpoint() {
+        try{
+            const [result] = await client.documentTextDetection(request);
+            const detections = result.textAnnotations;
+            console.log('Text:');
+            detections.forEach(text => console.log(text));
+            resp.json(detections);
+        } catch(error) {
+            resp.status(400).json(`problem with the API`);
+            console.log(error);
+        }
+    }
+    setEndpoint();
+});
+
+//Actual image post and resp - for image to text
+app.post('/imagelinkphoto', (req, resp) => {
 // Imports the Google Cloud client library
 
     const link = req.body.link;
@@ -94,6 +121,40 @@ app.post('/image', (req, resp) => {
     setEndpoint();
 })
 
+//Call for document type, writing. Text heavy pictures. Handwriting
+app.post('/imagelinkdocument', (req, resp) => {
+    // Imports the Google Cloud client library
+    
+        const link = req.body.link;
+    
+        console.log("Link is linkl from front end", link);
+    
+        console.log("Req body is", req.body);
+    
+        async function setEndpoint() {
+            // Specifies the location of the api endpoint
+            const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
+    
+            // Creates a client
+            const client = new vision.ImageAnnotatorClient(clientOptions);
+    
+            // Performs text detection on the image file
+            try{
+                const [result] = await client.documentTextDetection(`${link}`);
+                const detections = result.textAnnotations;
+                console.log('Text:');
+                detections.forEach(detections => console.log(detections.description));
+                console.log(detections);
+                resp.json(detections);
+            } catch(error) {
+                resp.status(400).json(`problem with the API`);
+                console.log(error);
+            }
+        }
+        setEndpoint();
+    })
+
+//API call for translated text DeepL
 app.post("/textfortranslation", (req, resp) => {
 
     const textFromImage = req.body.textFromImage;
