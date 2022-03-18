@@ -189,3 +189,30 @@ app.post("/textfortranslation", (req, resp) => {
     }
     fetchTranslationInfo()
 })
+
+
+const path = require("path");
+const multer = require ("multer");
+//const upload = multer({ dest: '../Test-Files'});
+//const upload = multer().single('avatar')
+//multer is used to handle multipart/form-data in node.js
+
+
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, '../Test-Files/')
+    },
+    filename: function (req, file, cb) {
+        var fname = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
+        cb(null, fname);
+    }
+})
+const upload = multer({storage: storage})
+
+app.post("/upload", upload.single("myImage"), uploadFiles);
+function uploadFiles(req, res) {
+    console.log(req.body);
+    console.log(req.files);
+    res.json({message: "Successfully uploaded files"})
+}
