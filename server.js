@@ -27,7 +27,7 @@ app.listen(3000, ()=> {
 })
 
 //Call for local image files, pictures/photos
-app.post('/localimagephoto', (req, resp) => {
+app.post('/localimagephoto', (req, res) => {
 
     const link = req.body.link;
 
@@ -48,9 +48,9 @@ app.post('/localimagephoto', (req, resp) => {
             const detections = result.textAnnotations;
             console.log('Text:');
             detections.forEach(text => console.log(text));
-            resp.json(detections);
+            res.json(detections);
         } catch(error) {
-            resp.status(400).json(`problem with the API`);
+            res.status(400).json(`problem with the API`);
             console.log(error);
         }
     }
@@ -58,7 +58,7 @@ app.post('/localimagephoto', (req, resp) => {
 });
 
 //Call for document type, writing. Text heavy pictures. Handwriting
-app.post('/localimagedocument', (req, resp) => {
+app.post('/localimagedocument', (req, res) => {
 
     const link = req.body.link;
 
@@ -79,9 +79,9 @@ app.post('/localimagedocument', (req, resp) => {
             const detections = result.textAnnotations;
             console.log('Text:');
             detections.forEach(text => console.log(text));
-            resp.json(detections);
+            res.json(detections);
         } catch(error) {
-            resp.status(400).json(`problem with the API`);
+            res.status(400).json(`problem with the API`);
             console.log(error);
         }
     }
@@ -89,7 +89,7 @@ app.post('/localimagedocument', (req, resp) => {
 });
 
 //Actual image post and resp - for image to text
-app.post('/imagelinkphoto', (req, resp) => {
+app.post('/imagelinkphoto', (req, res) => {
 // Imports the Google Cloud client library
 
     const link = req.body.link;
@@ -112,9 +112,9 @@ app.post('/imagelinkphoto', (req, resp) => {
             console.log('Text:');
             detections.forEach(detections => console.log(detections.description));
             console.log(detections);
-            resp.json(detections);
+            res.json(detections);
         } catch(error) {
-            resp.status(400).json(`problem with the API`);
+            res.status(400).json(`problem with the API`);
             console.log(error);
         }
     }
@@ -122,7 +122,7 @@ app.post('/imagelinkphoto', (req, resp) => {
 })
 
 //Call for document type, writing. Text heavy pictures. Handwriting
-app.post('/imagelinkdocument', (req, resp) => {
+app.post('/imagelinkdocument', (req, res) => {
     // Imports the Google Cloud client library
     
         const link = req.body.link;
@@ -145,9 +145,9 @@ app.post('/imagelinkdocument', (req, resp) => {
                 console.log('Text:');
                 detections.forEach(detections => console.log(detections.description));
                 console.log(detections);
-                resp.json(detections);
+                res.json(detections);
             } catch(error) {
-                resp.status(400).json(`problem with the API`);
+                res.status(400).json(`problem with the API`);
                 console.log(error);
             }
         }
@@ -155,7 +155,7 @@ app.post('/imagelinkdocument', (req, resp) => {
     })
 
 //API call for translated text DeepL
-app.post("/textfortranslation", (req, resp) => {
+app.post("/textfortranslation", (req, res) => {
 
     const textFromImage = req.body.textFromImage;
 
@@ -180,10 +180,10 @@ app.post("/textfortranslation", (req, resp) => {
         textFromDeepL = await response.json();
         console.log("This is the text returned from DeepL", textFromDeepL);
 
-        resp.json(textFromDeepL);
+        res.json(textFromDeepL);
 
         } catch(error){
-            resp.status(400).json(`problem with the API`);
+            res.status(400).json(`problem with the API`);
             console.log(error);
         }
     }
@@ -193,26 +193,54 @@ app.post("/textfortranslation", (req, resp) => {
 
 const path = require("path");
 const multer = require ("multer");
-//const upload = multer({ dest: '../Test-Files'});
-//const upload = multer().single('avatar')
 //multer is used to handle multipart/form-data in node.js
 
-
+let fname;
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, '../Test-Files/')
     },
     filename: function (req, file, cb) {
-        var fname = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
+        //used to name the files. Right now its based on the field name. If I did original name, may overwrite
+        fname = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
         cb(null, fname);
     }
 })
 const upload = multer({storage: storage})
 
+
+
 app.post("/upload", upload.single("myImage"), uploadFiles);
 function uploadFiles(req, res) {
     console.log(req.body);
     console.log(req.files);
-    res.json({message: "Successfully uploaded files"})
+
+    const client = new vision.ImageAnnotatorClient();
+
+    //test for upload - needed for encode, duplicate
+    var imageFileUpload = fs.readFileSync(`../Test-Files/${fname}`);
+    //defines internal file - duplicate
+    var imageB64Upload = Buffer.from(imageFileUpload).toString('base64');
+
+    const request = {
+        image: {
+            content: Buffer.from(imageB64Upload, 'base64')
+        }
+    };
+    
+    async function setEndpoint() {
+        try{
+            console.log(fname);
+            const [result] = await client.textDetection(request);
+            const detections = result.textAnnotations;
+            console.log('Text:');
+            detections.forEach(text => console.log(text));
+            res.json(detections);
+        } catch(error) {
+            res.status(400).json(`problem with the API`);
+            console.log(error);
+        }
+    }
+    setEndpoint();
 }
