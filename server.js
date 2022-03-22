@@ -5,6 +5,8 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 const app = express();
 const fs = require ('fs');
 const vision = require('@google-cloud/vision');
+const sizeOf = require("image-size");
+
 
 //for encoding
 var imageFile = fs.readFileSync('../Test-Files/Onigiri.ARW');
@@ -229,11 +231,16 @@ function uploadFiles(req, res) {
         }
     };
     
+    //detects image size to google
+    let dimensions = sizeOf(`../Test-Files/${fname}`);
+    
     async function setEndpoint() {
         try{
             console.log(fname);
             const [result] = await client.textDetection(request);
             const detections = result.textAnnotations;
+            detections.push(`../Test-Files/${fname}`);
+            detections.push(dimensions);
             console.log('Text:');
             detections.forEach(text => console.log(text));
             res.json(detections);
