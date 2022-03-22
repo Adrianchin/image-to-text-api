@@ -167,6 +167,7 @@ app.post("/textfortranslation", (req, res) => {
 
     async function fetchTranslationInfo() {
         try{
+            //REMOVE API KEY later!!!
         const response = await fetch('https://api-free.deepl.com/v2/translate', {
             method: 'POST',
             headers: {
@@ -201,7 +202,7 @@ let fname;
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, '../Test-Files/')
+        cb(null, './public/uploads')
     },
     filename: function (req, file, cb) {
         //used to name the files. Right now its based on the field name. If I did original name, may overwrite
@@ -211,8 +212,6 @@ const storage = multer.diskStorage({
 })
 const upload = multer({storage: storage})
 
-
-
 app.post("/upload", upload.single("myImage"), uploadFiles);
 function uploadFiles(req, res) {
     console.log(req.body);
@@ -221,7 +220,7 @@ function uploadFiles(req, res) {
     const client = new vision.ImageAnnotatorClient();
 
     //test for upload - needed for encode, duplicate
-    var imageFileUpload = fs.readFileSync(`../Test-Files/${fname}`);
+    var imageFileUpload = fs.readFileSync(`./public/uploads/${fname}`);
     //defines internal file - duplicate
     var imageB64Upload = Buffer.from(imageFileUpload).toString('base64');
 
@@ -232,14 +231,14 @@ function uploadFiles(req, res) {
     };
     
     //detects image size to google
-    let dimensions = sizeOf(`../Test-Files/${fname}`);
+    let dimensions = sizeOf(`./public/uploads/${fname}`);
     
     async function setEndpoint() {
         try{
             console.log(fname);
             const [result] = await client.textDetection(request);
             const detections = result.textAnnotations;
-            detections.push(`../Test-Files/${fname}`);
+            detections.push(`/public/uploads/${fname}`);
             detections.push(dimensions);
             console.log('Text:');
             detections.forEach(text => console.log(text));
@@ -251,3 +250,11 @@ function uploadFiles(req, res) {
     }
     setEndpoint();
 }
+
+//Responds with the picture in the drive that was uploaded
+
+app.get('/uploadpicture', (req, res) => {
+    console.log("local direct", req.query.imageLocation);
+    let localdir=req.query.imageLocation;
+    res.sendFile(__dirname+localdir);
+})
