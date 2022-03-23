@@ -253,7 +253,7 @@ function uploadFiles(req, res) {
 
 //Responds with the picture in the drive that was uploaded
 
-app.get('/uploadpicture', (req, res) => {
+app.get('/getuploadedpicture', (req, res) => {
     console.log("local direct", req.query.imageLocation);
     let localdir=req.query.imageLocation;
     res.sendFile(__dirname+localdir);
