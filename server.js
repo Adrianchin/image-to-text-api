@@ -168,22 +168,22 @@ app.post("/textfortranslation", (req, res) => {
     async function fetchTranslationInfo() {
         try{
             //REMOVE API KEY later!!!
-        const response = await fetch('https://api-free.deepl.com/v2/translate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Accept': '*/*'
-            },
-            body: new URLSearchParams({
-                target_lang: 'EN',
-                auth_key: 'ddec143e-2630-2a52-13fc-191f9cd1a070:fx',
-                text: textFromImage
+            const response = await fetch('https://api-free.deepl.com/v2/translate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': '*/*'
+                },
+                body: new URLSearchParams({
+                    target_lang: 'EN',
+                    auth_key: 'ddec143e-2630-2a52-13fc-191f9cd1a070:fx',
+                    text: textFromImage
+                })
             })
-        })
-        textFromDeepL = await response.json();
-        console.log("This is the text returned from DeepL", textFromDeepL);
+            textFromDeepL = await response.json();
+            console.log("This is the text returned from DeepL", textFromDeepL);
 
-        res.json(textFromDeepL);
+            res.json(textFromDeepL);
 
         } catch(error){
             res.status(400).json(`problem with the API`);
@@ -257,4 +257,29 @@ app.get('/getuploadedpicture', (req, res) => {
     console.log("local direct", req.query.imageLocation);
     let localdir=req.query.imageLocation;
     res.sendFile(__dirname+localdir);
+})
+
+
+//API call to tokenizer
+app.post("/tokenizetext", (req, res) => {
+    text=req.body.text;
+    async function tokenizeText() {
+        try{
+            const response = await fetch('http://localhost:8010/japanesetoken', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    text
+                })
+            })
+            tokenizedResponse = await response.json();
+            console.log("This is the text returned from tokenizer", tokenizedResponse);
+
+            res.json(tokenizedResponse);
+        } catch(error){
+            res.status(400).json(`problem with the API`);
+            console.log(error);
+        }
+    }
+    tokenizeText();
 })
