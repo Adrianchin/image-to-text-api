@@ -262,15 +262,15 @@ app.get('/getuploadedpicture', (req, res) => {
 
 //API call to tokenizer
 app.post("/tokenizetext", (req, res) => {
-    text=req.body.text;
+    let text=JSON.stringify({
+        text: req.body.text
+    })
     async function tokenizeText() {
         try{
             const response = await fetch('http://localhost:8010/japanesetoken', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    text
-                })
+                body: text
             })
             tokenizedResponse = await response.json();
             console.log("This is the text returned from tokenizer", tokenizedResponse);
