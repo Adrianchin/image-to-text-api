@@ -7,6 +7,11 @@ const fs = require ('fs');
 const vision = require('@google-cloud/vision');
 const sizeOf = require("image-size");
 
+const TextTranslation = require("./components/TextTranslation")
+const Tokenizer = require("./components/Tokenizer")
+const ImageUpload = require("./components/imageupload/ImageUpload")
+const LinkUpload = require("./components/linkupload/LinkUpload")
+
 
 //for encoding
 var imageFile = fs.readFileSync('../Test-Files/Onigiri.ARW');
@@ -30,22 +35,18 @@ app.listen(3000, ()=> {
 
 //Call for local image files, pictures/photos
 app.post('/localimagephoto', (req, res) => {
-
-    const link = req.body.link;
-
-    console.log("Link is linkl from front end", link);
-    
-    // Creates a client
-    const client = new vision.ImageAnnotatorClient();
-
-    const request = {
-        image: {
-            content: Buffer.from(imageB64, 'base64')
-        }
-    };
-    
-    async function setEndpoint() {
-        try{
+    /*
+    async function localImagePhoto() {
+        const link = req.body.link;
+        console.log("Link is linkl from front end", link);
+        // Creates a client
+        const client = new vision.ImageAnnotatorClient();
+        const request = {
+            image: {
+                content: Buffer.from(imageB64, 'base64')
+            }
+        }; 
+        try{   
             const [result] = await client.textDetection(request);
             const detections = result.textAnnotations;
             console.log('Text:');
@@ -56,26 +57,23 @@ app.post('/localimagephoto', (req, res) => {
             console.log(error);
         }
     }
-    setEndpoint();
+    */
+    LinkUpload.localImagePhoto(req,res);
 });
 
 //Call for document type, writing. Text heavy pictures. Handwriting
 app.post('/localimagedocument', (req, res) => {
-
-    const link = req.body.link;
-
-    console.log("Link is linkl from front end", link);
-    
-    // Creates a client
-    const client = new vision.ImageAnnotatorClient();
-
-    const request = {
-        image: {
-            content: Buffer.from(imageB64, 'base64')
-        }
-    };
-    
-    async function setEndpoint() {
+    /*
+    async function localimagedocument() {
+        const link = req.body.link;
+        console.log("Link is linkl from front end", link);
+        // Creates a client
+        const client = new vision.ImageAnnotatorClient();
+        const request = {
+            image: {
+                content: Buffer.from(imageB64, 'base64')
+            }
+        };
         try{
             const [result] = await client.documentTextDetection(request);
             const detections = result.textAnnotations;
@@ -87,26 +85,22 @@ app.post('/localimagedocument', (req, res) => {
             console.log(error);
         }
     }
-    setEndpoint();
+    */
+    LinkUpload.localimagedocument(req,res);
 });
 
 //Actual image post and resp - for image to text
 app.post('/imagelinkphoto', (req, res) => {
 // Imports the Google Cloud client library
-
+/*
+    async function imagelinkphoto() {
     const link = req.body.link;
-
     console.log("Link is linkl from front end", link);
-
-    console.log("Req body is", req.body);
-
-    async function setEndpoint() {
+    console.log("Req body is", req.body);    
         // Specifies the location of the api endpoint
         const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
-
         // Creates a client
         const client = new vision.ImageAnnotatorClient(clientOptions);
-
         // Performs text detection on the image file
         try{
             const [result] = await client.textDetection(`${link}`);
@@ -120,86 +114,50 @@ app.post('/imagelinkphoto', (req, res) => {
             console.log(error);
         }
     }
-    setEndpoint();
+    */
+    LinkUpload.imagelinkphoto(req,res);
 })
 
 //Call for document type, writing. Text heavy pictures. Handwriting
 app.post('/imagelinkdocument', (req, res) => {
     // Imports the Google Cloud client library
-    
+    /*
+    async function imagelinkdocument() {    
         const link = req.body.link;
-    
         console.log("Link is linkl from front end", link);
-    
         console.log("Req body is", req.body);
-    
-        async function setEndpoint() {
-            // Specifies the location of the api endpoint
-            const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
-    
-            // Creates a client
-            const client = new vision.ImageAnnotatorClient(clientOptions);
-    
-            // Performs text detection on the image file
-            try{
-                const [result] = await client.documentTextDetection(`${link}`);
-                const detections = result.textAnnotations;
-                console.log('Text:');
-                detections.forEach(detections => console.log(detections.description));
-                console.log(detections);
-                res.json(detections);
-            } catch(error) {
-                res.status(400).json(`problem with the API`);
-                console.log(error);
-            }
-        }
-        setEndpoint();
-    })
-
-//API call for translated text DeepL
-app.post("/textfortranslation", (req, res) => {
-
-    const textFromImage = req.body.textFromImage;
-
-    console.log("This is the text from the Image", textFromImage);
-
-    var textFromDeepL;
-
-    async function fetchTranslationInfo() {
+        // Specifies the location of the api endpoint
+        const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
+        // Creates a client
+        const client = new vision.ImageAnnotatorClient(clientOptions);
+        // Performs text detection on the image file
         try{
-            //REMOVE API KEY later!!!
-            const response = await fetch('https://api-free.deepl.com/v2/translate', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'Accept': '*/*'
-                },
-                body: new URLSearchParams({
-                    target_lang: 'EN',
-                    auth_key: 'ddec143e-2630-2a52-13fc-191f9cd1a070:fx',
-                    text: textFromImage
-                })
-            })
-            textFromDeepL = await response.json();
-            console.log("This is the text returned from DeepL", textFromDeepL);
-
-            res.json(textFromDeepL);
-
-        } catch(error){
+            const [result] = await client.documentTextDetection(`${link}`);
+            const detections = result.textAnnotations;
+            console.log('Text:');
+            detections.forEach(detections => console.log(detections.description));
+            console.log(detections);
+            res.json(detections);
+        } catch(error) {
             res.status(400).json(`problem with the API`);
             console.log(error);
         }
     }
-    fetchTranslationInfo()
+    */
+    LinkUpload.imagelinkdocument(req,res);
 })
 
+//API call for translated text DeepL
+app.post("/textfortranslation", (req, res) => {
+    TextTranslation.fetchTranslationInfo(req,res)
+})
 
+//Require to be global to set up Multer for image upload
+/*
+let fname;//file name, need as global
 const path = require("path");
 const multer = require ("multer");
 //multer is used to handle multipart/form-data in node.js
-
-let fname;
-
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './public/uploads')
@@ -210,29 +168,25 @@ const storage = multer.diskStorage({
         cb(null, fname);
     }
 })
-const upload = multer({storage: storage})
+*/
 
-app.post("/upload", upload.single("myImage"), uploadFiles);
-function uploadFiles(req, res) {
+
+app.post("/upload", ImageUpload.upload.single("myImage"), ImageUpload.uploadFiles);
+/*function uploadFiles(req, res) {
     console.log(req.body);
     console.log(req.files);
-
     const client = new vision.ImageAnnotatorClient();
-
     //test for upload - needed for encode, duplicate
     var imageFileUpload = fs.readFileSync(`./public/uploads/${fname}`);
     //defines internal file - duplicate
     var imageB64Upload = Buffer.from(imageFileUpload).toString('base64');
-
     const request = {
         image: {
             content: Buffer.from(imageB64Upload, 'base64')
         }
     };
-    
     //detects image size to google
     let dimensions = sizeOf(`./public/uploads/${fname}`);
-    
     async function setEndpoint() {
         try{
             console.log(fname);
@@ -249,7 +203,7 @@ function uploadFiles(req, res) {
         }
     }
     setEndpoint();
-}
+}*/
 
 //Responds with the picture in the drive that was uploaded
 
@@ -262,10 +216,11 @@ app.get('/getuploadedpicture', (req, res) => {
 
 //API call to tokenizer
 app.post("/tokenizetext", (req, res) => {
-    let text=JSON.stringify({
-        text: req.body.text
-    })
+    /*
     async function tokenizeText() {
+        let text=JSON.stringify({
+            text: req.body.text
+        })
         try{
             const response = await fetch('http://localhost:8010/japanesetoken', {
                 method: 'POST',
@@ -281,5 +236,6 @@ app.post("/tokenizetext", (req, res) => {
             console.log(error);
         }
     }
-    tokenizeText();
+    */
+    Tokenizer.tokenizeText(req,res);
 })
