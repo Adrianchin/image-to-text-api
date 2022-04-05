@@ -46,12 +46,10 @@ app.post("/tokenizetext", (req, res) => {
 app.post('/localimagephoto', (req, res) => {
     LinkUpload.localImagePhoto(req,res);
 });
-
 //Call for google vision api for local (server-side) document type, writing. Text heavy pictures. Handwriting - Not used
 app.post('/localimagedocument', (req, res) => {
     LinkUpload.localimagedocument(req,res);
 });
-
 //Call for document type, writing. Text heavy pictures. Handwriting - Not used
 app.post('/imagelinkdocument', (req, res) => {
     LinkUpload.imagelinkdocument(req,res);
