@@ -10,6 +10,31 @@ const LinkUpload = require("./components/linkupload/LinkUpload")
 app.use(cors());
 app.use(express.json());
 
+const testUsers = [
+    {
+        id: 1,
+        username:"Adrian",
+        password:"cookies"
+
+    },
+    {
+        id: 2,
+        username:"Daniel",
+        password:"cookies"
+    },
+    {
+        id: 3,
+        username:"Jess",
+        password:"cookies"
+
+    },
+    {
+        id: 4,
+        username:"Greg",
+        password:"cookies"
+    },
+]
+
 app.listen(3000, ()=> {
     console.log('app is running on port 3000')
 })
@@ -39,6 +64,17 @@ app.post("/tokenizetext", (req, res) => {
     Tokenizer.tokenizeText(req,res);
 })
 
+app.post("/signin", (req, res) => {
+    const loginSubmission = req.body
+    for (let i=0; i < testUsers.length; i++){
+        console.log(i)
+        if(testUsers[i].username === loginSubmission.username && testUsers[i].password === loginSubmission.password){
+            console.log("this is sent back")
+            return res.json(testUsers[i]);
+        };
+    }
+    return res.status(400).json('wrong credentials')
+})
 
 //NOT USED RIGHT NOW
 
