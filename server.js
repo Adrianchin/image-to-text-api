@@ -90,15 +90,32 @@ app.post("/tokenizetext", (req, res) => {
 })
 
 app.post("/signin", (req, res) => {
-    const loginSubmission = req.body
-    for (let i=0; i < testUsers.length; i++){
-        console.log(i)
-        if(testUsers[i].username === loginSubmission.username && testUsers[i].password === loginSubmission.password){
-            console.log("this is sent back")
-            return res.json(testUsers[i]);
-        };
+    async function loginMongo(){
+        try{
+            await client.connect();
+            const loginSubmission = req.body;
+            let userCredentials = await searchForUsernameCredentials(client, loginSubmission.username.toLowerCase());
+            if(userCredentials.password === loginSubmission.password){
+                const returnedUserInformation= await searchForUsernameProfile(client, userCredentials.id)
+                res.json(returnedUserInformation);
+            }else{
+                return res.status(400).json('wrong credentials')
+            }
+        }catch (error) {
+            console.log(error);
+        }finally {
+            await client.close();
+        }
     }
-    return res.status(400).json('wrong credentials')
+    loginMongo()
+    async function searchForUsernameCredentials(client, username){
+        const resultSearchForUsername = await client.db("profile_information").collection("user_login_data").findOne({ username: username});
+        return resultSearchForUsername;
+    };
+    async function searchForUsernameProfile(client, id){
+        const resultSearchForUsername = await client.db("profile_information").collection("user_profile").findOne({ _id: id});
+        return resultSearchForUsername;
+    };
 })
 
 app.post("/register", (req, res) => {
@@ -106,16 +123,7 @@ app.post("/register", (req, res) => {
         try{
             await client.connect();
             const loginSubmission = req.body;
-            const userProfile = {
-                username: loginSubmission.username,
-                email: loginSubmission.email,
-                userData: null
-            }
-            const userCredentials = {
-                username: loginSubmission.username.toLowerCase(),
-                email: loginSubmission.email.toLowerCase(),
-                password: loginSubmission.password
-            }
+
             //Tests for if username or email exists
             let testForUsername = await searchForUsername(client, loginSubmission.username.toLowerCase());
             let testForEmail = await searchForEmail(client, loginSubmission.email.toLowerCase());
@@ -130,8 +138,7 @@ app.post("/register", (req, res) => {
                 console.log("test Email")
                 return res.status(400).json('Email already exists')
             }else {
-                await createUserProfile(client, userProfile, userCredentials);
-                res.json(userProfile)
+                await createUserProfile(client, loginSubmission);
                 } 
         }catch (error) {
             console.log(error);
@@ -141,9 +148,21 @@ app.post("/register", (req, res) => {
     }
     testMongo().catch(console.error)
 
-    async function createUserProfile(client, userProfile, userCredentials){
-        await client.db("profile_information").collection("user_profile").insertOne(userProfile);
+    async function createUserProfile(client, loginSubmission){
+        const userProfile = {
+            username: loginSubmission.username,
+            email: loginSubmission.email,
+            userData: null
+        }
+        let result = await client.db("profile_information").collection("user_profile").insertOne(userProfile);
+        const userCredentials = {
+            username: loginSubmission.username.toLowerCase(),
+            email: loginSubmission.email.toLowerCase(),
+            id: result.insertedId,
+            password: loginSubmission.password
+        }
         await client.db("profile_information").collection("user_login_data").insertOne(userCredentials);
+        res.json(userProfile);
     };
 
     async function searchForUsername(client, username){
