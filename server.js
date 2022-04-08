@@ -12,26 +12,6 @@ const { response } = require('express');
 const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(uri);
 
-/*
-async function testMongo(){
-    try{
-    await client.connect();
-    await listDatabases(client);
-    } catch (error) {
-        console.log(error);
-    }finally {
-        await client.close();
-    }
-}
-testMongo().catch(console.error)
-
-async function listDatabases(client){
-    databasesList = await client.db().admin().listDatabases();
-    console.log("Databases:");
-    databasesList.databases.forEach(db => console.log(` - ${db.name}`));
-};
-*/
-
 app.use(cors());
 app.use(express.json());
 
@@ -93,7 +73,7 @@ app.post("/signin", (req, res) => {
             let userCredentials = await searchForUsernameCredentials(client, loginSubmission.username.toLowerCase());
             if(userCredentials.password === loginSubmission.password){
                 const returnedUserInformation = await searchForUsernameProfile(client, userCredentials.id)
-                returnedUserInformation["userData"] = await searchForUserData(client, String(returnedUserInformation._id))
+                returnedUserInformation["profile"] = await searchForUserData(client, String(returnedUserInformation._id))
                 return res.json(returnedUserInformation);
             }else{
                 return res.status(400).json('wrong credentials')
@@ -114,7 +94,7 @@ app.post("/signin", (req, res) => {
         return resultSearchForUsername;
     };
     async function searchForUserData(client, userID){
-        const resultSearchForUsername = await client.db("profile_information").collection("app_data").find({id: userID}).toArray();
+        const resultSearchForUsername = await client.db("profile_information").collection("app_data").find({id: userID}).sort({ date: -1 }).toArray();
         console.log(resultSearchForUsername)
         return resultSearchForUsername;
     }
@@ -137,7 +117,7 @@ app.get("/getProfileData", (req,res) => {
     fetchProfileData();
 
     async function searchForUserData(client, userID){
-        const resultSearchForUsername = await client.db("profile_information").collection("app_data").find({id: userID}).toArray();
+        const resultSearchForUsername = await client.db("profile_information").collection("app_data").find({id: userID}).sort({ date: -1 }).toArray();
         console.log(resultSearchForUsername)
         return resultSearchForUsername;
     }
