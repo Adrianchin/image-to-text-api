@@ -23,8 +23,8 @@ const storage = multer.diskStorage({
 const upload = multer({storage: storage})
 
 function uploadFiles(req, res) {
-    console.log(req.body);
-    console.log(req.files);
+    //console.log(req.body);
+    //console.log(req.files);
 
     const client = new vision.ImageAnnotatorClient();
 
@@ -43,13 +43,13 @@ function uploadFiles(req, res) {
     
     async function setEndpoint() {
         try{
-            console.log(fname);
+            //console.log(fname);
             const [result] = await client.textDetection(request);
             const detections = result.textAnnotations;
             detections.push(`/public/uploads/${fname}`);
             detections.push(dimensions);
-            console.log('Text:');
-            detections.forEach(text => console.log(text));
+            //console.log('Text:');
+            //detections.forEach(text => console.log(text));
             res.json(detections);
         } catch(error) {
             res.status(400).json(`problem with the API`);

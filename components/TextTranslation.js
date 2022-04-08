@@ -19,7 +19,7 @@ async function fetchTranslationInfo(req, res) {
             })
         })
         textFromDeepL = await response.json();
-        console.log("This is the text returned from DeepL", textFromDeepL);
+        //console.log("This is the text returned from DeepL", textFromDeepL);
         res.json(textFromDeepL);
     } catch(error){
         res.status(400).json(`problem with the API`);
