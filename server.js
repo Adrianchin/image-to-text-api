@@ -35,31 +35,6 @@ async function listDatabases(client){
 app.use(cors());
 app.use(express.json());
 
-const testUsers = [
-    {
-        id: 1,
-        username:"Adrian",
-        password:"cookies"
-
-    },
-    {
-        id: 2,
-        username:"Daniel",
-        password:"cookies"
-    },
-    {
-        id: 3,
-        username:"Jess",
-        password:"cookies"
-
-    },
-    {
-        id: 4,
-        username:"Greg",
-        password:"cookies"
-    },
-]
-
 app.listen(3000, ()=> {
     console.log('app is running on port 3000')
 })
@@ -152,7 +127,7 @@ app.post("/register", (req, res) => {
         const userProfile = {
             username: loginSubmission.username,
             email: loginSubmission.email,
-            userData: null
+            history: []
         }
         let result = await client.db("profile_information").collection("user_profile").insertOne(userProfile);
         const userCredentials = {
