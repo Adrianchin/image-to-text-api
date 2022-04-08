@@ -56,7 +56,7 @@ app.post("/upload", ImageUpload.upload.single("myImage"), ImageUpload.uploadFile
 app.get('/getuploadedpicture', (req, res) => {
     console.log("local direct", req.query.imageLocation);
     let localdir=req.query.imageLocation;
-    res.sendFile(__dirname+localdir);
+    return res.sendFile(__dirname+localdir);
 })
 
 //API call to tokenizer
@@ -71,7 +71,7 @@ app.put("/postdata", (req, res) => {
             await client.connect();
             const dataForUpload=req.body;
             await uploadDataToMongo(client, dataForUpload);
-            res.json("Successfully Uploaded to DB: ");
+            return res.json("Successfully Uploaded to DB: ");
         }catch (error) {
             console.log(error);
         }finally {
@@ -92,8 +92,9 @@ app.post("/signin", (req, res) => {
             const loginSubmission = req.body;
             let userCredentials = await searchForUsernameCredentials(client, loginSubmission.username.toLowerCase());
             if(userCredentials.password === loginSubmission.password){
-                const returnedUserInformation= await searchForUsernameProfile(client, userCredentials.id)
-                res.json(returnedUserInformation);
+                const returnedUserInformation = await searchForUsernameProfile(client, userCredentials.id)
+                returnedUserInformation["userData"] = await searchForUserData(client, String(returnedUserInformation._id))
+                return res.json(returnedUserInformation);
             }else{
                 return res.status(400).json('wrong credentials')
             }
@@ -112,6 +113,34 @@ app.post("/signin", (req, res) => {
         const resultSearchForUsername = await client.db("profile_information").collection("user_profile").findOne({ _id: id});
         return resultSearchForUsername;
     };
+    async function searchForUserData(client, userID){
+        const resultSearchForUsername = await client.db("profile_information").collection("app_data").find({id: userID}).toArray();
+        console.log(resultSearchForUsername)
+        return resultSearchForUsername;
+    }
+})
+
+app.get("/getProfileData", (req,res) => {
+    async function fetchProfileData(){
+        try{
+            await client.connect();
+            const userID = req.query.id;
+            console.log("This is userID: ", userID )
+            let profileCardData = await searchForUserData(client, String(userID));
+            return res.json(profileCardData);
+        }catch (error) {
+            console.log(error);
+        }finally {
+            await client.close();
+        }
+    }
+    fetchProfileData();
+
+    async function searchForUserData(client, userID){
+        const resultSearchForUsername = await client.db("profile_information").collection("app_data").find({id: userID}).toArray();
+        console.log(resultSearchForUsername)
+        return resultSearchForUsername;
+    }
 })
 
 app.post("/register", (req, res) => {
