@@ -64,14 +64,14 @@ app.post("/tokenizetext", (req, res) => {
     Tokenizer.tokenizeText(req,res);
 })
 
-app.post("/postdata", (req, res) => {
+app.put("/postdata", (req, res) => {
     //console.log("This is the post data", req.body)
     async function dataForUploadMongo(){
         try{
             await client.connect();
             const dataForUpload=req.body;
-            let resultUploadDataToMongo = await uploadDataToMongo(client, dataForUpload);
-            res.json("Successfully Uploaded to DB: ", resultUploadDataToMongo);
+            await uploadDataToMongo(client, dataForUpload);
+            res.json("Successfully Uploaded to DB: ");
         }catch (error) {
             console.log(error);
         }finally {
@@ -81,8 +81,7 @@ app.post("/postdata", (req, res) => {
     dataForUploadMongo();
 
     async function uploadDataToMongo(client, dataForUpload){
-        const resultUploadDataToMongo = await client.db("profile_information").collection("app_data").insertOne(dataForUpload);
-        return resultUploadDataToMongo;
+        await client.db("profile_information").collection("app_data").insertOne(dataForUpload);
     };
 })
 
