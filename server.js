@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require ('cors');
 const app = express();
-const {MongoClient} = require("mongodb");
+const {MongoClient, ObjectId} = require("mongodb");
 
 const TextTranslation = require("./components/TextTranslation")
 const Tokenizer = require("./components/Tokenizer")
@@ -62,6 +62,28 @@ app.put("/postdata", (req, res) => {
 
     async function uploadDataToMongo(client, dataForUpload){
         await client.db("profile_information").collection("app_data").insertOne(dataForUpload);
+    };
+})
+
+app.post("/deletedocument", (req, res) => {
+    async function deleteDocumentMongo(){
+        try{
+            await client.connect();
+            const documentForDelete=new ObjectId(req.body._id);
+            console.log(documentForDelete);
+            const returnDocumentDelete = await deleteDocument(client, documentForDelete);
+            return res.json(returnDocumentDelete);
+        }catch (error) {
+            console.log(error);
+        }finally {
+            await client.close();
+        }
+    }
+    deleteDocumentMongo();
+
+    async function deleteDocument(client, documentForDelete){
+        const deleteDocumentResult =await client.db("profile_information").collection("app_data").deleteOne({_id: documentForDelete});
+        return deleteDocumentResult;
     };
 })
 
