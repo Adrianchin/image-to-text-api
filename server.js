@@ -145,6 +145,31 @@ app.get("/getProfileData", (req,res) => {
     }
 })
 
+app.post("/updatehistory", (req, res) => {
+    async function updateHistory(){
+        try{ 
+            await client.connect();
+            console.log(req.body)
+            const nameOfDocument=new ObjectId(req.body._id);
+            const translatedText = req.body.translatedText;
+            const tokenizedText = req.body.tokenizedText;
+            const date = req.body.date;
+            let response = await updateMongoHistory(client, nameOfDocument, {translatedText: translatedText, tokenizedText: tokenizedText, date: date});
+            return res.json(response);
+        }catch (error) {
+            console.log(error);
+        }finally {
+            await client.close();
+        }
+    }
+    updateHistory().catch(console.error)
+
+    async function updateMongoHistory(client, nameOfDocument, dataForUpdate){
+        const result = await client.db("profile_information").collection("app_data").updateOne({ _id: nameOfDocument }, { $set: dataForUpdate })
+        return result;
+    }
+})
+
 app.post("/register", (req, res) => {
     async function testMongo(){
         try{
