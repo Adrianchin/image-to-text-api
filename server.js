@@ -150,7 +150,7 @@ app.post("/updatehistory", (req, res) => {
         try{ 
             await client.connect();
             console.log(req.body)
-            const nameOfDocument=new ObjectId(req.body._id);
+            const nameOfDocument = new ObjectId(req.body._id);
             const translatedText = req.body.translatedText;
             const tokenizedText = req.body.tokenizedText;
             const date = req.body.date;
