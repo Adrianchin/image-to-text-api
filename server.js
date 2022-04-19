@@ -12,20 +12,66 @@ const { response } = require('express');
 const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(uri);
 
-app.use(cors());
-app.use(express.json());
+const mongoose = require('mongoose');//delete
+var passport = require('passport');
+var crypto = require('crypto');
+//var routes = require('./routes');
+//const connection = require('./config/database');
+// Need to require the entire Passport config module so app.js knows about it
 
+const session = require('express-session');
+require('./config/passport');
+  
+var corsOptions = {
+    origin: 'http://localhost:3001',
+    credentials:  true
+  }
+  
+app.use(cors(corsOptions))
+
+app.use(express.json());
+app.use(express.urlencoded());
+//Session Store for user data
+var MongoDBStore = require('connect-mongodb-session')(session);
+
+
+const sessionStore = new MongoDBStore({
+    uri: uri,
+    databaseName:"profile_information",
+    collection: 'userSessions'
+  });
+
+app.use(session({
+    secret: "some secret",
+    resave: false,
+    saveUninitialized: true,
+    store: sessionStore,
+    cookie: {
+        maxAge: 1000*60*60*24 //equals 1 day (1day*24hr*60min*60sec*1000ms)
+    }
+}))
+
+/**
+ * -------------- PASSPORT AUTHENTICATION ----------------
+ */
+/*
+app.use(passport.initialize());
+app.use(passport.session());
+
+*/
 app.listen(3000, ()=> {
     console.log('app is running on port 3000')
 })
 
+
+
 //Calls for image from provided link
-app.post('/imagelinkphoto', (req, res) => {
+app.post('/imagelinkphoto', (req, res, next) => {
     LinkUpload.imagelinkphoto(req,res);
 })
 
 //API call for translated text DeepL
-app.post("/textfortranslation", (req, res) => {
+app.post("/textfortranslation", (req, res, next) => {
     TextTranslation.fetchTranslationInfo(req,res)
 })
 
@@ -33,18 +79,18 @@ app.post("/textfortranslation", (req, res) => {
 app.post("/upload", ImageUpload.upload.single("myImage"), ImageUpload.uploadFiles);
 
 //API call for location of local saved picture to return to front end
-app.get('/getuploadedpicture', (req, res) => {
-    console.log("local direct", req.query.imageLocation);
+app.get('/getuploadedpicture', (req, res, next) => {
+    //console.log("local direct", req.query.imageLocation);
     let localdir=req.query.imageLocation;
     return res.sendFile(__dirname+localdir);
 })
 
 //API call to tokenizer
-app.post("/tokenizetext", (req, res) => {
+app.post("/tokenizetext", (req, res, next) => {
     Tokenizer.tokenizeText(req,res);
 })
 
-app.put("/postdata", (req, res) => {
+app.put("/postdata", (req, res, next) => {
     //console.log("This is the post data", req.body)
     async function dataForUploadMongo(){
         try{
@@ -65,12 +111,12 @@ app.put("/postdata", (req, res) => {
     };
 })
 
-app.post("/deletedocument", (req, res) => {
+app.post("/deletedocument", (req, res, next) => {
     async function deleteDocumentMongo(){
         try{
             await client.connect();
             const documentForDelete=new ObjectId(req.body._id);
-            console.log(documentForDelete);
+            //console.log(documentForDelete);
             const returnDocumentDelete = await deleteDocument(client, documentForDelete);
             return res.json(returnDocumentDelete);
         }catch (error) {
@@ -87,7 +133,7 @@ app.post("/deletedocument", (req, res) => {
     };
 })
 
-app.post("/signin", (req, res) => {
+app.post("/signin", (req, res, next) => {
     async function loginMongo(){
         try{
             await client.connect();
@@ -117,17 +163,17 @@ app.post("/signin", (req, res) => {
     };
     async function searchForUserData(client, userID){
         const resultSearchForUsername = await client.db("profile_information").collection("app_data").find({id: userID}).sort({ date: -1 }).toArray();
-        console.log(resultSearchForUsername)
+        //console.log(resultSearchForUsername)
         return resultSearchForUsername;
     }
 })
 
-app.get("/getProfileData", (req,res) => {
+app.get("/getProfileData", (req,res, next) => {
     async function fetchProfileData(){
         try{
             await client.connect();
             const userID = req.query.id;
-            console.log("This is userID: ", userID )
+            //console.log("This is userID: ", userID )
             let profileCardData = await searchForUserData(client, String(userID));
             return res.json(profileCardData);
         }catch (error) {
@@ -145,11 +191,11 @@ app.get("/getProfileData", (req,res) => {
     }
 })
 
-app.post("/updatehistory", (req, res) => {
+app.post("/updatehistory", (req, res, next) => {
     async function updateHistory(){
         try{ 
             await client.connect();
-            console.log(req.body)
+            //console.log(req.body)
             const nameOfDocument = new ObjectId(req.body._id);
             const translatedText = req.body.translatedText;
             const tokenizedText = req.body.tokenizedText;
@@ -170,7 +216,7 @@ app.post("/updatehistory", (req, res) => {
     }
 })
 
-app.post("/register", (req, res) => {
+app.post("/register", (req, res, next) => {
     async function testMongo(){
         try{
             await client.connect();
