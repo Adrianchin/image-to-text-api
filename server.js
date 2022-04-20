@@ -14,6 +14,8 @@ const {
     findProfileDataById,
     deleteDocumentByID,
     updateDocumentFields,
+    searchForUsername,
+    searchForEmail,
 } = require("./db/Models")
 
 const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
@@ -287,6 +289,40 @@ app.post("/updatehistory", (req, res, next) => {
 })
 
 app.post("/register", (req, res, next) => {
+    async function registerUser(){
+        const loginSubmission = req.body;
+        try{
+            //Tests for if username or email exists
+            let testForUsername = await searchForUsername(loginSubmission.username.toLowerCase());
+            let testForEmail = await searchForEmail(loginSubmission.email.toLowerCase());
+
+            if(!loginSubmission.username || !loginSubmission.email || !loginSubmission.password ){
+                console.log("test empty")
+                return res.status(400).json('incorrect form submission')
+            }else if(testForUsername != null){
+                console.log("test Username")
+                return res.status(400).json('Username already exists')
+            }else if(testForEmail != null){
+                console.log("test Email")
+                return res.status(400).json('Email already exists')
+            }else {
+                const responseCreateUserLoginData = await createUserLoginData({
+                    username:loginSubmission.username,
+                    lowerCaseUsername:loginSubmission.username.toLowerCase(),
+                    email:loginSubmission.email,
+                    lowerCaseEmail:loginSubmission.email.toLowerCase(),
+                    salt:"placeholder",
+                    password:loginSubmission.password,
+                });
+                return res.json(responseCreateUserLoginData)
+                } 
+        }catch (error) {
+            console.log(error);
+            return res.json("Error with registering user: ",error)
+        }
+    }
+    registerUser()
+    /*
     async function testMongo(){
         try{
             await client.connect();
@@ -341,7 +377,7 @@ app.post("/register", (req, res, next) => {
     async function searchForEmail(client, email){
         const resultSearchForEmail = await client.db("profile_information").collection("user_login_data").findOne({ email: email});
         return resultSearchForEmail;
-    };
+    };*/
 
 })
 

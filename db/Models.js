@@ -7,7 +7,17 @@ const userLoginDataSchema = new mongoose.Schema({
         required: true,
         unique: true,
     },
+    lowerCaseUsername:{
+        type: String,
+        required: true,
+        unique: true,
+    },
     email:{
+        type: String,
+        required: true,
+        unique: true,
+    },
+    lowerCaseEmail:{
         type: String,
         required: true,
         unique: true,
@@ -92,6 +102,16 @@ async function createUserLoginData(data){
     return result;
 }
 
+async function searchForUsername(username){
+    let result = await userLoginData.findOne({lowerCaseUsername:username})
+    return result;
+}
+
+async function searchForEmail(email){
+    let result = await userLoginData.findOne({lowerCaseEmail:email})
+    return result;
+}
+
 async function createApp_Data(data){
     let result = await app_data.create(data);
     return result;
@@ -121,5 +141,7 @@ module.exports = {
     createApp_Data,
     findProfileDataById,
     deleteDocumentByID,
-    updateDocumentFields
+    updateDocumentFields,
+    searchForUsername,
+    searchForEmail,
 }
