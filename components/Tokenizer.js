@@ -11,7 +11,7 @@ async function tokenizeText(req, res) {
             body: text
         })
         tokenizedResponse = await response.json();
-        console.log("This is the text returned from tokenizer", tokenizedResponse);
+        //console.log("This is the text returned from tokenizer", tokenizedResponse);
 
         res.json(tokenizedResponse);
     } catch(error){

@@ -2,7 +2,7 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 
 async function fetchTranslationInfo(req, res) {
     const textFromImage = req.body.textFromImage;
-    console.log("This is the text from the Image", textFromImage);
+    //console.log("This is the text from the Image", textFromImage);
     let textFromDeepL;
     try{
         //REMOVE API KEY later!!!
