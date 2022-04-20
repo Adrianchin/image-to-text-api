@@ -6,6 +6,8 @@ const {MongoClient, ObjectId} = require("mongodb");
 const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(uri);
 
+const {UserLoginData} = require ("../db/Models")
+
 const customFields = {
     usernameField: "username",
     passwordField: "password"
@@ -13,6 +15,21 @@ const customFields = {
 
 //Passport stuff
 async function verifyCallback(username, password, done) {
+    try{
+        const user = await UserLoginData.findOne({lowerCaseUsername:username.toLowerCase()});
+        if(!user){
+            return done(null,false)//no username matched
+        }
+        const isValid = validPassword(password, user.hash, user.salt);
+        if (isValid) {
+            return done(null, user);//authenticated
+        }else{
+            return done(null, false);//username and password mismatch
+        }
+    }catch (err){
+        done(err)
+    }
+    /*
     let userCredentials;
     try{
         await client.connect();
@@ -31,19 +48,25 @@ async function verifyCallback(username, password, done) {
         return done(null, userCredentials);
     }else{
         return done(null, false);
-    }
+    }*/
 }
 
 const stratagy = new LocalStratagy(customFields, verifyCallback);
 
 passport.use(stratagy);
 
-passport.serializeUser((userCredentials, done) => {
-    done(null, userCredentials.id);
+passport.serializeUser((user, done) => {
+    done(null, user.id);
 });
-/*
+
 passport.deserializeUser((userId, done) => {
-    let userCredentials;
+    UserLoginData.findById({userId, done})
+    .then((userLoginData)=>{
+        done(null, userLoginData);
+    })
+    .catch(err => done(err))
+});
+    /*let userCredentials;
     try{
         await client.connect();
         userCredentials = await client.db("profile_information").collection("user_login_data").findOne({ _id: userId});
@@ -58,8 +81,7 @@ passport.deserializeUser((userId, done) => {
     }finally {
         await client.close();
     }
-});
-*/
+});*/
 
 /*
 const passport = require("passport");

@@ -17,12 +17,16 @@ const {
     searchForUsername,
     searchForEmail,
 } = require("./db/Models")
+const {genPassword} = require("./components/authutility/AuthenticationTools");
+
 
 const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 const client = new MongoClient(uri);
 
-//Import the mongoose module
+//Import the mongoose module;
+const session = require("express-session");
 const mongoose = require('mongoose');
+const MongoStore = require('connect-mongo');
 //Set up default mongoose connection
 const mongoDB="mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/profile_information";
 const dbName ="profile_information"
@@ -35,15 +39,42 @@ db.once("open", function(){
     console.log("Connected with Mongoose Successfully!");
 });
 
-  
+const connectionSession = mongoose.createConnection(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true})  
+
 var corsOptions = {
     origin: 'http://localhost:3001',
     credentials:  true
   }
-  
+ /* 
+  const sessionStore = new MongoStore({
+      mongoose_connection: connectionSession,
+      collectionName : "sessions",
+  })*/
+
 app.use(cors(corsOptions))
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
+
+app.use(session({
+    secret: "some secret",
+    resave: false,
+    saveUninitialized: true,
+    store: MongoStore.create({
+        mongoUrl:mongoDB,
+        collectionName:"sessions"
+    }),
+    cookie: {
+        maxAge: 1000*60*60*24 //equals 1 day (1day*24hr*60min*60sec*1000ms)
+    }
+}))
+
+/* Passport Authentication */
+require("./config/passport")
+const passport = require('passport');
+
+
+app.use(passport.initialize());
+app.use(passport.session())
 
 /*
 //Session Store for user data
@@ -291,6 +322,9 @@ app.post("/updatehistory", (req, res, next) => {
 app.post("/register", (req, res, next) => {
     async function registerUser(){
         const loginSubmission = req.body;
+        const saltHash = genPassword(loginSubmission.password);
+        const salt = saltHash.salt;
+        const hash = saltHash.hash;
         try{
             //Tests for if username or email exists
             let testForUsername = await searchForUsername(loginSubmission.username.toLowerCase());
@@ -311,8 +345,8 @@ app.post("/register", (req, res, next) => {
                     lowerCaseUsername:loginSubmission.username.toLowerCase(),
                     email:loginSubmission.email,
                     lowerCaseEmail:loginSubmission.email.toLowerCase(),
-                    salt:"placeholder",
-                    password:loginSubmission.password,
+                    salt:salt,
+                    hash:hash,
                 });
                 return res.json(responseCreateUserLoginData)
                 } 
