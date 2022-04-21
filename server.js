@@ -16,6 +16,7 @@ const {
     updateDocumentFields,
     searchForUsername,
     searchForEmail,
+    UserLoginData,
 } = require("./db/Models")
 const {genPassword} = require("./components/authutility/AuthenticationTools");
 
@@ -24,7 +25,7 @@ const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstD
 const client = new MongoClient(uri);
 
 //Import the mongoose module;
-const session = require("express-session");
+const session = require("express-session");//required for passport sessions to be attached to
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
 //Set up default mongoose connection
@@ -69,12 +70,13 @@ app.use(session({
 }))
 
 /* Passport Authentication */
+const passport = require('passport');//used for passport
+
 require("./config/passport")
-const passport = require('passport');
 
 
 app.use(passport.initialize());
-app.use(passport.session())
+app.use(passport.session());
 
 /*
 //Session Store for user data
@@ -211,7 +213,22 @@ app.post("/deletedocument", (req, res, next) => {
     };*/
 })
 
-app.post("/signin", (req, res) => {
+app.post("/signin", passport.authenticate('local'), function(req, res) {
+    async function loginStart(){
+        const loginSubmission = req.body;
+        try{
+            let returnedUserInformation = await UserLoginData.findOne({loweCaseUsername:loginSubmission.username.toLowerCase(),}).select({username:1,email:1}).lean();
+            let placeholder = await findProfileDataById(returnedUserInformation._id);
+            returnedUserInformation["profile"]=placeholder;
+            //console.log("pass 2 ", placeholder)
+            //console.log(typeof returnedUserInformation)
+            //console.log(typeof placeholder)
+            return res.json(returnedUserInformation);
+        }catch (error) {
+            console.log(error);
+        }
+    }loginStart()
+    /*
     async function loginMongo(){
         try{
             await client.connect();
@@ -243,7 +260,7 @@ app.post("/signin", (req, res) => {
         const resultSearchForUsername = await client.db("profile_information").collection("app_data").find({id: userID}).sort({ date: -1 }).toArray();
         //console.log(resultSearchForUsername)
         return resultSearchForUsername;
-    }
+    }*/
 })        
 
 app.get("/getProfileData", (req,res, next) => {
