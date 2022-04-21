@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require ('cors');
 const app = express();
-const {MongoClient, ObjectId} = require("mongodb");
+const {ObjectId} = require("mongodb");
 
 const TextTranslation = require("./components/TextTranslation")
 const Tokenizer = require("./components/Tokenizer")
@@ -17,12 +17,19 @@ const {
     searchForUsername,
     searchForEmail,
     UserLoginData,
-} = require("./db/Models")
-const {genPassword} = require("./components/authutility/AuthenticationTools");
+} = require("./db/Models");
+
+const {
+    isAuth
+} = require("./passportconfig/AuthMiddleware");
+
+const {
+    genPassword
+} = require("./components/authutility/AuthenticationTools");
 
 
-const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
-const client = new MongoClient(uri);
+//const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+//const client = new MongoClient(uri);
 
 //Import the mongoose module;
 const session = require("express-session");//required for passport sessions to be attached to
@@ -30,7 +37,7 @@ const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
 //Set up default mongoose connection
 const mongoDB="mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/profile_information";
-const dbName ="profile_information"
+//const dbName ="profile_information"
 mongoose.connect(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true})
 //Get the default connection
 const db = mongoose.connection;
@@ -40,24 +47,19 @@ db.once("open", function(){
     console.log("Connected with Mongoose Successfully!");
 });
 
-const connectionSession = mongoose.createConnection(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true})  
+//const connectionSession = mongoose.createConnection(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true})  
 
 var corsOptions = {
     origin: 'http://localhost:3001',
     credentials:  true
   }
- /* 
-  const sessionStore = new MongoStore({
-      mongoose_connection: connectionSession,
-      collectionName : "sessions",
-  })*/
 
 app.use(cors(corsOptions))
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
 app.use(session({
-    secret: "some secret",
+    secret: "some secret",//this is a hash used to verify cookie
     resave: false,
     saveUninitialized: true,
     store: MongoStore.create({
@@ -65,40 +67,17 @@ app.use(session({
         collectionName:"sessions"
     }),
     cookie: {
-        maxAge: 1000*60*60*24 //equals 1 day (1day*24hr*60min*60sec*1000ms)
+        maxAge: 1000*60*60*24*7 //equals 1 day (1day*24hr*60min*60sec*1000ms)
     }
 }))
 
 /* Passport Authentication */
 const passport = require('passport');//used for passport
 
-require("./config/passport")
-
+require("./passportconfig/Passport")
 
 app.use(passport.initialize());
 app.use(passport.session());
-
-/*
-//Session Store for user data
-var MongoDBStore = require('connect-mongodb-session')(session);
-
-//use mongoDB for sessions 
-const sessionStore = new MongoDBStore({
-    uri: uri,
-    databaseName:"profile_information",
-    collection: 'userSessions'
-  });
-//use sessions as middleware
-app.use(session({
-    secret: "some secret", //throw as an environment var, should be > process.env.SECRET
-    resave: false,
-    saveUninitialized: true,
-    store: sessionStore,
-    cookie: {
-        maxAge: 1000*60*60*24 //equals 1 day (1day*24hr*60min*60sec*1000ms)
-    }
-}))
-*/
 
 app.listen(3000, ()=> {
     console.log('app is running on port 3000')
@@ -107,31 +86,31 @@ app.listen(3000, ()=> {
 
 
 //Calls for image from provided link
-app.post('/imagelinkphoto', (req, res, next) => {
+app.post('/imagelinkphoto', isAuth, (req, res) => {
     LinkUpload.imagelinkphoto(req,res);
 })
 
 //API call for translated text DeepL
-app.post("/textfortranslation", (req, res, next) => {
+app.post("/textfortranslation", isAuth, (req, res) => {
     TextTranslation.fetchTranslationInfo(req,res)
 })
 
 //API call for uploaded image from user. Saves image locally and send image to Google api.
-app.post("/upload", ImageUpload.upload.single("myImage"), ImageUpload.uploadFiles);
+app.post("/upload", isAuth, ImageUpload.upload.single("myImage"), ImageUpload.uploadFiles);
 
 //API call for location of local saved picture to return to front end
-app.get('/getuploadedpicture', (req, res, next) => {
+app.get('/getuploadedpicture', isAuth, (req, res) => {
     //console.log("local direct", req.query.imageLocation);
     let localdir=req.query.imageLocation;
     return res.sendFile(__dirname+localdir);
 })
 
 //API call to tokenizer
-app.post("/tokenizetext", (req, res, next) => {
+app.post("/tokenizetext", isAuth, (req, res) => {
     Tokenizer.tokenizeText(req,res);
 })
 
-app.put("/postdata", (req, res, next) => {
+app.put("/postdata", isAuth, (req, res) => {
     //console.log("This is the post data", req.body)
     async function dataForUploadMongo(){
         const dataForUpload=req.body;
@@ -179,7 +158,7 @@ app.put("/postdata", (req, res, next) => {
     };*/
 })
 
-app.post("/deletedocument", (req, res, next) => {
+app.post("/deletedocument", isAuth, (req, res) => {
     async function deleteDocument(){
         const documentForDelete=new ObjectId(req.body._id);
         try{
@@ -263,9 +242,9 @@ app.post("/signin", passport.authenticate('local'), function(req, res) {
     }*/
 })        
 
-app.get("/getProfileData", (req,res, next) => {
+app.get("/getProfileData", isAuth, (req,res) => {
     async function fetchProfileData(){
-        const userID = req.query.id;
+        const userID = req.session.passport.user.id;
         try{
             let profileCardData = await findProfileDataById(userID);
             return res.json(profileCardData);
@@ -297,7 +276,7 @@ app.get("/getProfileData", (req,res, next) => {
     }*/
 })
 
-app.post("/updatehistory", (req, res, next) => {
+app.post("/updatehistory", isAuth, (req, res) => {
     async function updateHistory(){
         const idOfDocument = new ObjectId(req.body._id);
         const translatedText = req.body.translatedText;
@@ -336,7 +315,7 @@ app.post("/updatehistory", (req, res, next) => {
     }*/
 })
 
-app.post("/register", (req, res, next) => {
+app.post("/register", (req, res) => {
     async function registerUser(){
         const loginSubmission = req.body;
         const saltHash = genPassword(loginSubmission.password);

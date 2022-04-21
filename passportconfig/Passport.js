@@ -2,9 +2,9 @@ const passport = require("passport");
 const LocalStratagy = require("passport-local").Strategy;
 const {validPassword} = require("../components/authutility/AuthenticationTools")
 
-const {MongoClient, ObjectId} = require("mongodb");
-const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
-const client = new MongoClient(uri);
+//const {MongoClient, ObjectId} = require("mongodb");
+//const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
+//const client = new MongoClient(uri);
 
 const {UserLoginData} = require ("../db/Models")
 
