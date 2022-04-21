@@ -152,7 +152,7 @@ app.post("/deletedocument", isAuth, (req, res) => {
     deleteDocument()
 })
 
-app.post("/signin", passport.authenticate('local'), function(req, res) {
+app.post("/signin", passport.authenticate('local'), function(req, res) {//May remove the return of profile data other than the array, as i am using cookies right now
     async function loginStart(){
         const loginSubmission = req.body;
         try{
