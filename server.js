@@ -124,8 +124,8 @@ app.put("/postdata", isAuth, (req, res) => {
                 rawImageBox:dataForUpload.rawImageBox,
                 translatedText:dataForUpload.translatedText,
                 tokenizedText:dataForUpload.tokenizedText,
-                id:dataForUpload.id,
-                username:dataForUpload.username,
+                id:req.session.passport.user.id, //taken from cookie
+                username:req.session.passport.user.username, //taken from cookie
                 linkImagePath:dataForUpload.linkImagePath,
                 date:dataForUpload.date
             })
@@ -141,7 +141,7 @@ app.put("/postdata", isAuth, (req, res) => {
 
 app.post("/deletedocument", isAuth, (req, res) => {
     async function deleteDocument(){
-        const documentForDelete=new ObjectId(req.body._id);
+        const documentForDelete=new ObjectId(req.body._id); //unique id of document
         try{
             const returnDocumentDeleted = await deleteDocumentByID(documentForDelete);
             return res.json(returnDocumentDeleted);
@@ -181,7 +181,7 @@ app.get("/getProfileData", isAuth, (req,res) => {
 
 app.post("/updatehistory", isAuth, (req, res) => {
     async function updateHistory(){
-        const idOfDocument = new ObjectId(req.body._id);
+        const idOfDocument = new ObjectId(req.body._id); //unique id of document
         const translatedText = req.body.translatedText;
         const tokenizedText = req.body.tokenizedText;
         const date = req.body.date;
