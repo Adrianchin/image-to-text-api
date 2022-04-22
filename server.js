@@ -153,7 +153,10 @@ app.post("/deletedocument", isAuth, (req, res) => {
         try{
             const returnDocumentDeleted = await deleteDocumentByID(documentIDForDelete);
             console.log(returnDocumentDeleted)
-            await unlinkAsync(`./public/uploads/${imageFileForDelete}`)
+            if (imageFileForDelete != null){
+                await unlinkAsync(`./public/uploads/${imageFileForDelete}`)
+                return res.json("Deleted uploaded file and profile data: ",returnDocumentDeleted)
+            }
             return res.json(returnDocumentDeleted);
         }catch (error){
             console.log("Error in deletedocument: ",error);
