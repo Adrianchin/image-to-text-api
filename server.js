@@ -106,6 +106,12 @@ app.get('/getuploadedpicture', isAuth, (req, res) => {
     return res.sendFile(__dirname+localdir);
 })
 
+app.get('/getuploadedpicturenew', (req, res) => {
+    //console.log("local direct", req.query.imageLocation);
+    let localdir=req.query.imageLocation;
+    return res.sendFile(__dirname+localdir);
+})
+
 //API call to tokenizer
 app.post("/tokenizetext", isAuth, (req, res) => {
     Tokenizer.tokenizeText(req,res);
@@ -155,7 +161,7 @@ app.post("/deletedocument", isAuth, (req, res) => {
             console.log(returnDocumentDeleted)
             if (imageFileForDelete != null){
                 await unlinkAsync(`./public/uploads/${imageFileForDelete}`)
-                return res.json("Deleted uploaded file and profile data: ",returnDocumentDeleted)
+                return res.json("Deleted uploaded file and profile data: ")
             }
             return res.json(returnDocumentDeleted);
         }catch (error){
