@@ -164,6 +164,11 @@ app.post("/signin", passport.authenticate('local'), function(req, res) {//May re
             console.log(error);
         }
     }loginStart()
+})       
+
+app.post("/signout", (req,res) => {
+    req.logout()
+    return res.json("Successfully Logged Out");
 })        
 
 app.get("/getProfileData", isAuth, (req,res) => {
@@ -208,13 +213,13 @@ app.post("/register", (req, res) => {
 
             if(!loginSubmission.username || !loginSubmission.email || !loginSubmission.password ){
                 console.log("test empty")
-                return res.status(400).json('incorrect form submission')
+                return res.status(401).json('incorrect form submission')
             }else if(testForUsername != null){
                 console.log("test Username")
-                return res.status(400).json('Username already exists')
+                return res.status(401).json('Username already exists')
             }else if(testForEmail != null){
                 console.log("test Email")
-                return res.status(400).json('Email already exists')
+                return res.status(401).json('Email already exists')
             }else {
                 const responseCreateUserLoginData = await createUserLoginData({
                     username:loginSubmission.username,
