@@ -141,12 +141,19 @@ app.put("/postdata", isAuth, (req, res) => {
     dataForUploadMongo();
 })
 
+//For delete image
+const {promisify} = require("util")
+const unlinkAsync = promisify(fs.unlink)
+
 app.post("/deletedocument", isAuth, (req, res) => {
+    
     async function deleteDocument(){
-        const documentForDelete=new ObjectId(req.body._id); //unique id of document
+        const documentIDForDelete=new ObjectId(req.body.data._id); //unique id of document
+        const imageFileForDelete = req.body.data.imageFileName
         try{
-            const returnDocumentDeleted = await deleteDocumentByID(documentForDelete);
-            //fs.unlink(documentForDelete.imageURL)
+            const returnDocumentDeleted = await deleteDocumentByID(documentIDForDelete);
+            console.log(returnDocumentDeleted)
+            await unlinkAsync(`./public/uploads/${imageFileForDelete}`)
             return res.json(returnDocumentDeleted);
         }catch (error){
             console.log("Error in deletedocument: ",error);
