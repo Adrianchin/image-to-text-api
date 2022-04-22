@@ -99,14 +99,11 @@ app.post("/textfortranslation", isAuth, (req, res) => {
 //API call for uploaded image from user. Saves image locally and send image to Google api.
 app.post("/upload", isAuth, ImageUpload.upload.single("myImage"), ImageUpload.uploadFiles);
 
+//TEST FOR ALL AT ONCE
+app.post("/uploadTest", ImageUpload.upload.single("myImage"), ImageUpload.uploadFilesRoute);
+
 //API call for location of local saved picture to return to front end
 app.get('/getuploadedpicture', isAuth, (req, res) => {
-    //console.log("local direct", req.query.imageLocation);
-    let localdir=req.query.imageLocation;
-    return res.sendFile(__dirname+localdir);
-})
-
-app.get('/getuploadedpicturenew', (req, res) => {
     //console.log("local direct", req.query.imageLocation);
     let localdir=req.query.imageLocation;
     return res.sendFile(__dirname+localdir);
