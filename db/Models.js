@@ -23,7 +23,8 @@ const userLoginDataSchema = new mongoose.Schema({
         unique: true,
     },
     salt:{
-        type: String
+        type: String,
+        required: true,
     },
     hash:{
         type: String,
@@ -33,10 +34,12 @@ const userLoginDataSchema = new mongoose.Schema({
 
 const originalImageSizeSchema = new mongoose.Schema({
     height:{
-        type: Number
+        type: Number,
+        required: true,
     },
     width:{
-        type: Number
+        type: Number,
+        required: true,
     },
     type: {
         type: String
@@ -45,16 +48,20 @@ const originalImageSizeSchema = new mongoose.Schema({
 
 const rawImageBoxSchema = new mongoose.Schema({
     top:{
-        type: Number
+        type: Number,
+        required: true,
     },
     right:{
-        type: Number
+        type: Number,
+        required: true,
     },
     left:{
-        type: Number
+        type: Number,
+        required: true,
     },
     bottom:{
-        type: Number
+        type: Number,
+        required: true,
     },
 })
 
@@ -63,35 +70,47 @@ const app_dataSchema = new mongoose.Schema({
         type:Boolean
     },
     originalImageSize:{
-        type: originalImageSizeSchema
+        type: originalImageSizeSchema,
+        required: true,
     },
     imageInformation:{
-        type: Array
+        type: Array,
+        required: true,
     },
     imageURL:{
-        type: String
+        type: String,
+        required: true,
     },
     rawImageBox:{
-        type: rawImageBoxSchema
+        type: rawImageBoxSchema,
+        required: true,
     },
     translatedText:{
-        type: String
+        type: String,
+        required: true,
     },
     tokenizedText:{
-        type: Array
+        type: Array,
+        required: true,
     },
     date:{
-        type: Date
+        type: Date,
+        required: true,
     },
     id:{
-        type: ObjectId
+        type: ObjectId,
+        required: true,
     },
     username:{
-        type: String
+        type: String,
+        required: true,
     },
     linkImagePath:{
         type: Boolean
-    }
+    },
+    imageFileName:{
+        type: String, default: null
+    },
 })
 
 const UserLoginData = mongoose.model("userLoginData", userLoginDataSchema)

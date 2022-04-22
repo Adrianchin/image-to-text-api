@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require ('cors');
 const app = express();
 const {ObjectId} = require("mongodb");
+const fs = require("fs");
 
 const TextTranslation = require("./components/TextTranslation")
 const Tokenizer = require("./components/Tokenizer")
@@ -127,13 +128,14 @@ app.put("/postdata", isAuth, (req, res) => {
                 id:req.session.passport.user.id, //taken from cookie
                 username:req.session.passport.user.username, //taken from cookie
                 linkImagePath:dataForUpload.linkImagePath,
-                date:dataForUpload.date
+                date:dataForUpload.date,
+                imageFileName:dataForUpload.imageFileName,
             })
             //console.log(result)
             return res.json("Successfully Uploaded to DB: ");
         }catch(error) {
-            console.log(error);
-            return res.json("Problem uploading data")
+            console.log("Error in postdata: ", error);
+            return res.status(500).send("Problem uploading data" , req.body);
         }
     }
     dataForUploadMongo();
@@ -144,9 +146,11 @@ app.post("/deletedocument", isAuth, (req, res) => {
         const documentForDelete=new ObjectId(req.body._id); //unique id of document
         try{
             const returnDocumentDeleted = await deleteDocumentByID(documentForDelete);
+            //fs.unlink(documentForDelete.imageURL)
             return res.json(returnDocumentDeleted);
         }catch (error){
-            console.log(error);
+            console.log("Error in deletedocument: ",error);
+            return res.status(500).send("Problem deleting data" , req.body);
         }
     }
     deleteDocument()
@@ -161,7 +165,8 @@ app.post("/signin", passport.authenticate('local'), function(req, res) {//May re
             returnedUserInformation["profile"]=placeholder;
             return res.json(returnedUserInformation);
         }catch (error) {
-            console.log(error);
+            console.log("Error in signin: ",error);
+            return res.status(401).send("Problem signing in");
         }
     }loginStart()
 })       
@@ -178,7 +183,8 @@ app.get("/getProfileData", isAuth, (req,res) => {
             let profileCardData = await findProfileDataById(userID);
             return res.json(profileCardData);
         }catch (error) {
-            console.log("Error finding personal data: ", error);
+            console.log("Error getpersonaldata: ", error);
+            return res.status(500).send("Problem getting data" );
         }
     }
     fetchProfileData();
@@ -194,7 +200,8 @@ app.post("/updatehistory", isAuth, (req, res) => {
             const responseUpdateDocumentFields = updateDocumentFields(idOfDocument, date, translatedText, tokenizedText)
             return res.json(responseUpdateDocumentFields);
         }catch(error){
-            console.log("Error finding personal data: ", error);
+            console.log("Error updatehistory: ", error);
+            return res.status(500).send("Problem updating data" , req.body);
         }
     }
     updateHistory()
@@ -232,8 +239,8 @@ app.post("/register", (req, res) => {
                 return res.json(responseCreateUserLoginData)
                 } 
         }catch (error) {
-            console.log(error);
-            return res.json("Error with registering user: ",error)
+            console.log("Error in register: ", error);
+            return res.status(500).send("Problem registering" , req.body);
         }
     }
     registerUser()

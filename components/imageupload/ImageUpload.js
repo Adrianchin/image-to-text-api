@@ -48,12 +48,13 @@ function uploadFiles(req, res) {
             const detections = result.textAnnotations;
             detections.push(`/public/uploads/${fname}`);
             detections.push(dimensions);
+            detections.push(fname);
             //console.log('Text:');
             //detections.forEach(text => console.log(text));
             res.json(detections);
         } catch(error) {
-            res.status(400).json(`problem with the API`);
             console.log(error);
+            return res.status(500).json(`problem with the Google API`);
         }
     }
     setEndpoint();
