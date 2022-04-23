@@ -91,9 +91,13 @@ app.post('/imagelinkphoto', isAuth, (req, res) => {
     LinkUpload.imagelinkphoto(req,res);
 })
 
+app.post('/imagelinkphototest', isAuth, (req, res,next) => {
+    LinkUpload.linkFilesRoute(req,res,next);
+})
+
 //API call for translated text DeepL
 app.post("/textfortranslation", isAuth, (req, res) => {
-    TextTranslation.fetchTranslationInfo(req,res)
+TextTranslation.fetchTranslationInfo(req,res)
 })
 
 //API call for uploaded image from user. Saves image locally and send image to Google api.

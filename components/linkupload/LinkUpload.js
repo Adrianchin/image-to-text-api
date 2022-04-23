@@ -1,6 +1,8 @@
 
 const fs = require ('fs');
 const vision = require('@google-cloud/vision');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+
 
 //for encoding
 var imageFile = fs.readFileSync('../Test-Files/myImage-1647917711417.jpg');
@@ -52,6 +54,7 @@ async function linkFilesRoute(req, res, next) {
       };
 
       requestData.imageURL = req.body.link;
+      requestData.originalImageSize = req.body.originalImageSize;
 
     //Test for all calculations in 1 call
     async function imagelinkphoto() {  
@@ -63,6 +66,12 @@ async function linkFilesRoute(req, res, next) {
         try{
             const [result] = await client.textDetection(`${requestData.imageURL}`);
             requestData.imageInformation = result.textAnnotations;
+            requestData.rawImageBox = {
+                top: requestData.imageInformation[0].boundingPoly.vertices[0].y,
+                right: requestData.imageInformation[0].boundingPoly.vertices[1].x,
+                left: requestData.imageInformation[0].boundingPoly.vertices[0].x,
+                bottom: requestData.originalImageSize.height - requestData.imageInformation[0].boundingPoly.vertices[2].y,
+            };
         } catch(error) {
             res.status(400).json(`problem with the Google API`);
             console.log(error);
@@ -70,44 +79,7 @@ async function linkFilesRoute(req, res, next) {
     }
     await imagelinkphoto()
 
-    async function imageDimensions() {
-        //IMPORTANT: onload is async, so you need to put shit in it and whatever you are
-        //doing with it in the onload function!
-        //Note. I made a promise beause otherwise, onload will be async and we need the outputs
-        //for the box calculations. This is a general onload promise, which we then use for the image
-        function onLoadPromiseImageFunction(image) {
-          return new Promise((resolve, reject) => {
-            image.onload = () => resolve(image);
-            image.onerror = reject;
-          });
-        }
-  
-        let img = new Image();
-        let imgpromise = onLoadPromiseImageFunction(img);
-        img.src = requestData.imageURL;
-        await imgpromise;
-  
-        const originalHeight = img.height;
-        const originalWidth = img.width;
-  
-        const originalImageSize = {
-          height: originalHeight,
-          width: originalWidth,
-          type: "url",
-        };
-  
-        requestData.originalImageSize = originalImageSize; //For MongoDB
-  
-        //Note: Google API is 0,1,2,3, counterclockwise top left, 0,0 is top left. I have to take away the Original height from the bottom value
-        //Updates the box for render
-        requestData.rawImageBox = {
-          top: requestData.imageInformation[0].boundingPoly.vertices[0].y,
-          right: requestData.imageInformation[0].boundingPoly.vertices[1].x,
-          left: requestData.imageInformation[0].boundingPoly.vertices[0].x,
-          bottom: originalHeight - requestData.imageInformation[0].boundingPoly.vertices[2].y,
-        };
-      }
-    await imageDimensions(); //Step 2, Requires step 1
+    console.log(requestData.rawImageBox)
 
         //Make this into a function from translate text
     async function textForTranslation(){
@@ -154,7 +126,7 @@ async function linkFilesRoute(req, res, next) {
         }
     }
     await tokenizeText()
-    /*
+
     async function dataForUploadMongo(){
         try{
             const result = await createApp_Data({
@@ -178,7 +150,7 @@ async function linkFilesRoute(req, res, next) {
         }
     }
     await dataForUploadMongo();
-    */
+
     return res.json(requestData);
 }
 
@@ -260,5 +232,6 @@ module.exports = {
     localImagePhoto,
     localimagedocument,
     imagelinkphoto,
-    imagelinkdocument
+    imagelinkdocument,
+    linkFilesRoute
 }
