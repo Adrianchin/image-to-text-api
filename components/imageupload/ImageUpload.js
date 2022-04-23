@@ -81,6 +81,7 @@ async function uploadFilesRoute(req, res, next) {
         tokenizedText: null,//
         date: new Date(),//
         imageFileName: null,//
+        notes: "none",
       };
     const client = new vision.ImageAnnotatorClient();
     //test for upload - needed for encode, duplicate
@@ -156,8 +157,7 @@ async function uploadFilesRoute(req, res, next) {
             //console.log("This is the text returned from tokenizer", tokenizedResponse);
             requestData.tokenizedText = tokenizedResponse;
         } catch(error){
-            res.status(400).json(`problem with the Tokenizer API`);
-            console.log(error);
+            requestData.notes = "Error with Tokenizer";
         }
     }
     await tokenizeText()
@@ -179,6 +179,7 @@ async function uploadFilesRoute(req, res, next) {
                 linkImagePath:requestData.linkImagePath,
                 date:requestData.date,
                 imageFileName:requestData.imageFileName,
+                notes:requestData.notes,
             })
             //console.log(result)
         }catch(error) {

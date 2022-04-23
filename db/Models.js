@@ -90,8 +90,7 @@ const app_dataSchema = new mongoose.Schema({
         required: true,
     },
     tokenizedText:{
-        type: Array,
-        required: true,
+        type: Array, default: null
     },
     date:{
         type: Date,
@@ -110,6 +109,9 @@ const app_dataSchema = new mongoose.Schema({
     },
     imageFileName:{
         type: String, default: null
+    },
+    notes:{
+        type: String, default: "none"
     },
 })
 

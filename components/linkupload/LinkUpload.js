@@ -31,12 +31,11 @@ console.log("Req body is", req.body);
         console.log(error);
     }
 }
+
 //Route for file upload route - IT WORKS
 const {
     createApp_Data, 
 } = require("../../db/Models");
-const { request } = require('http');
-const { url } = require('inspector');
 
 async function linkFilesRoute(req, res, next) {
 
@@ -51,6 +50,7 @@ async function linkFilesRoute(req, res, next) {
         tokenizedText: null,
         date: new Date(),//
         imageFileName: null,//
+        notes: "none",
       };
 
       requestData.imageURL = req.body.link;
@@ -121,8 +121,7 @@ async function linkFilesRoute(req, res, next) {
             //console.log("This is the text returned from tokenizer", tokenizedResponse);
             requestData.tokenizedText = tokenizedResponse;
         } catch(error){
-            res.status(400).json(`problem with the Tokenizer API`);
-            console.log(error);
+            requestData.notes = "Error with Tokenizer";
         }
     }
     await tokenizeText()
@@ -142,6 +141,7 @@ async function linkFilesRoute(req, res, next) {
                 linkImagePath:requestData.linkImagePath,
                 date:requestData.date,
                 imageFileName:requestData.imageFileName,
+                notes:requestData.notes,
             })
             //console.log(result)
         }catch(error) {
