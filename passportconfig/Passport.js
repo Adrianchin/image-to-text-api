@@ -1,6 +1,6 @@
 const passport = require("passport");
 const LocalStratagy = require("passport-local").Strategy;
-const {validPassword} = require("../components/authutility/AuthenticationTools")
+const {validPassword} = require("../components/AuthenticationTools")
 
 const {UserLoginData} = require ("../db/Models")
 

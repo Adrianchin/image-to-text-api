@@ -12,7 +12,7 @@ const {
 
 const {
     genPassword
-} = require("../components/authutility/AuthenticationTools");
+} = require("../components/AuthenticationTools");
 
 const {
     isAuth
