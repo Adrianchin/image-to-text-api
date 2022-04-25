@@ -10,7 +10,6 @@ const multer = require ("multer");
 //multer is used to handle multipart/form-data in node.js
 
 //Note This is used for uploaded pictures (jpeg) to be saved on server and sent to Google
-
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, './public/uploads')
@@ -23,44 +22,6 @@ const storage = multer.diskStorage({
 })
 
 const upload = multer({storage: storage})
-
-function uploadFiles(req, res) {
-    //console.log(req.body);
-    //console.log(req.files);
-
-    const client = new vision.ImageAnnotatorClient();
-
-    //test for upload - needed for encode, duplicate
-    var imageFileUpload = fs.readFileSync(`./public/uploads/${fname}`);
-    //defines internal file - duplicate
-    var imageB64Upload = Buffer.from(imageFileUpload).toString('base64');
-
-    const request = {
-        image: {
-            content: Buffer.from(imageB64Upload, 'base64')
-        }
-    };  
-    //detects image size to google
-    let dimensions = sizeOf(`./public/uploads/${fname}`);
-    
-    async function setEndpoint() {
-        try{
-            //console.log(fname);
-            const [result] = await client.textDetection(request);
-            const detections = result.textAnnotations;
-            detections.push(`/public/uploads/${fname}`);
-            detections.push(dimensions);
-            detections.push(fname);
-            //console.log('Text:');
-            //detections.forEach(text => console.log(text));
-            res.json(detections);
-        } catch(error) {
-            console.log(error);
-            return res.status(500).json(`problem with the Google API`);
-        }
-    }
-    setEndpoint();
-}
 
 //Route for file upload route - IT WORKS
 const {
@@ -194,7 +155,46 @@ async function uploadFilesRoute(req, res, next) {
 
 
 module.exports = {
-    uploadFiles,
     upload,
     uploadFilesRoute
 }
+
+/* No longer used
+function uploadFiles(req, res) {
+    //console.log(req.body);
+    //console.log(req.files);
+
+    const client = new vision.ImageAnnotatorClient();
+
+    //test for upload - needed for encode, duplicate
+    var imageFileUpload = fs.readFileSync(`./public/uploads/${fname}`);
+    //defines internal file - duplicate
+    var imageB64Upload = Buffer.from(imageFileUpload).toString('base64');
+
+    const request = {
+        image: {
+            content: Buffer.from(imageB64Upload, 'base64')
+        }
+    };  
+    //detects image size to google
+    let dimensions = sizeOf(`./public/uploads/${fname}`);
+    
+    async function setEndpoint() {
+        try{
+            //console.log(fname);
+            const [result] = await client.textDetection(request);
+            const detections = result.textAnnotations;
+            detections.push(`/public/uploads/${fname}`);
+            detections.push(dimensions);
+            detections.push(fname);
+            //console.log('Text:');
+            //detections.forEach(text => console.log(text));
+            res.json(detections);
+        } catch(error) {
+            console.log(error);
+            return res.status(500).json(`problem with the Google API`);
+        }
+    }
+    setEndpoint();
+}
+*/

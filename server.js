@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require ('cors');
 const app = express();
+
+/* Moved to routes
 const {ObjectId} = require("mongodb");
 const fs = require("fs");
 
@@ -8,9 +10,12 @@ const TextTranslation = require("./components/TextTranslation")
 const Tokenizer = require("./components/Tokenizer")
 const ImageUpload = require("./components/imageupload/ImageUpload")
 const LinkUpload = require("./components/linkupload/LinkUpload");
+*/
 
-const uploads = require("./routes/uploads")
+const Uploads = require("./routes/Uploads")
+const Users = require("./routes/Users")
 
+/* Moved to routes
 const {
     createUserLoginData, 
     createApp_Data, 
@@ -23,12 +28,15 @@ const {
 } = require("./db/Models");
 
 const {
+    genPassword
+} = require("./components/authutility/AuthenticationTools");
+
+*/
+
+const {
     isAuth
 } = require("./passportconfig/AuthMiddleware");
 
-const {
-    genPassword
-} = require("./components/authutility/AuthenticationTools");
 
 const port = process.env.port || 3000;
 //const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
@@ -87,45 +95,19 @@ app.listen(port, ()=> {
 })
 
 
-app.use("/uploads",isAuth, uploads)
+app.use("/uploads",isAuth, Uploads)
+app.use("/users", Users)
 
-
+/*Not Used, Combined
 //Calls for image from provided link
 app.post('/imagelinkphoto', isAuth, (req, res) => {
     LinkUpload.imagelinkphoto(req,res);
 })
 
-app.post('/imagelinkphototest', isAuth, (req, res,next) => {
-    LinkUpload.linkFilesRoute(req,res,next);
-})
-
-//API call for translated text DeepL
-app.post("/textfortranslation", isAuth, (req, res) => {
-TextTranslation.fetchTranslationInfo(req,res)
-})
-
 //API call for uploaded image from user. Saves image locally and send image to Google api.
 app.post("/upload", isAuth, ImageUpload.upload.single("myImage"), ImageUpload.uploadFiles);
 
-//TEST FOR ALL AT ONCE
-app.post("/uploadTest", ImageUpload.upload.single("myImage"), ImageUpload.uploadFilesRoute);
-
-/* moved to uploads
-//API call for location of local saved picture to return to front end
-app.get('/getuploadedpicture', isAuth, (req, res) => {
-    //console.log("local direct", req.query.imageLocation);
-    let localdir=req.query.imageLocation;
-    return res.sendFile(`${__dirname}`+localdir);
-})
-
-*/
-/*Moved to routes
-//API call to tokenizer
-app.post("/tokenizetext", isAuth, (req, res) => {
-    Tokenizer.tokenizeText(req,res);
-})
-*/
-
+//This is no longer used
 app.put("/postdata", isAuth, (req, res) => {
     //console.log("This is the post data", req.body)
     async function dataForUploadMongo(){
@@ -157,6 +139,55 @@ app.put("/postdata", isAuth, (req, res) => {
     dataForUploadMongo();
 })
 
+*/
+
+
+
+/* Moved to routes
+
+app.post('/imagelinkphototest', isAuth, (req, res,next) => {
+    LinkUpload.linkFilesRoute(req,res,next);
+})
+
+
+//API call for translated text DeepL
+app.post("/textfortranslation", isAuth, (req, res) => {
+TextTranslation.fetchTranslationInfo(req,res)
+})
+
+//TEST FOR ALL AT ONCE
+app.post("/uploadTest", ImageUpload.upload.single("myImage"), ImageUpload.uploadFilesRoute);
+
+//API call for location of local saved picture to return to front end
+app.get('/getuploadedpicture', isAuth, (req, res) => {
+    //console.log("local direct", req.query.imageLocation);
+    let localdir=req.query.imageLocation;
+    return res.sendFile(`${__dirname}`+localdir);
+})
+
+//API call to tokenizer
+app.post("/tokenizetext", isAuth, (req, res) => {
+    Tokenizer.tokenizeText(req,res);
+})
+
+
+app.post("/updatehistory", isAuth, (req, res) => {
+    async function updateHistory(){
+        const idOfDocument = new ObjectId(req.body._id); //unique id of document
+        const translatedText = req.body.translatedText;
+        const tokenizedText = req.body.tokenizedText;
+        const date = req.body.date;
+        try{
+            const responseUpdateDocumentFields = await updateDocumentFields(idOfDocument, date, translatedText, tokenizedText)
+            return res.json(responseUpdateDocumentFields);
+        }catch(error){
+            console.log("Error updatehistory: ", error);
+            return res.status(500).send("Problem updating data" , req.body);
+        }
+    }
+    updateHistory()
+})
+
 //For delete image
 const {promisify} = require("util")
 const unlinkAsync = promisify(fs.unlink)
@@ -182,25 +213,8 @@ app.post("/deletedocument", isAuth, (req, res) => {
     deleteDocument()
 })
 
-app.post("/signin", passport.authenticate('local'), function(req, res) {//May remove the return of profile data other than the array, as i am using cookies right now
-    async function loginStart(){
-        const loginSubmission = req.body;
-        try{
-            let returnedUserInformation = await UserLoginData.findOne({loweCaseUsername:loginSubmission.username.toLowerCase(),}).select({username:1,email:1}).lean();
-            let placeholder = await findProfileDataById(returnedUserInformation._id);
-            returnedUserInformation["profile"]=placeholder;
-            return res.json(returnedUserInformation);
-        }catch (error) {
-            console.log("Error in signin: ",error);
-            return res.status(401).send("Problem signing in");
-        }
-    }loginStart()
-})       
-
-app.post("/signout", (req,res) => {
-    req.logout()
-    return res.json("Successfully Logged Out");
-})        
+*/
+/* Moved to Users
 
 app.get("/getProfileData", isAuth, (req,res) => {
     async function fetchProfileData(){
@@ -216,22 +230,20 @@ app.get("/getProfileData", isAuth, (req,res) => {
     fetchProfileData();
 })
 
-app.post("/updatehistory", isAuth, (req, res) => {
-    async function updateHistory(){
-        const idOfDocument = new ObjectId(req.body._id); //unique id of document
-        const translatedText = req.body.translatedText;
-        const tokenizedText = req.body.tokenizedText;
-        const date = req.body.date;
+app.post("/signin", passport.authenticate('local'), function(req, res) {//May remove the return of profile data other than the array, as i am using cookies right now
+    async function loginStart(){
+        const loginSubmission = req.body;
         try{
-            const responseUpdateDocumentFields = updateDocumentFields(idOfDocument, date, translatedText, tokenizedText)
-            return res.json(responseUpdateDocumentFields);
-        }catch(error){
-            console.log("Error updatehistory: ", error);
-            return res.status(500).send("Problem updating data" , req.body);
+            let returnedUserInformation = await UserLoginData.findOne({loweCaseUsername:loginSubmission.username.toLowerCase(),}).select({username:1,email:1}).lean();
+            let placeholder = await findProfileDataById(returnedUserInformation._id);
+            returnedUserInformation["profile"]=placeholder;
+            return res.json(returnedUserInformation);
+        }catch (error) {
+            console.log("Error in signin: ",error);
+            return res.status(401).send("Problem signing in");
         }
-    }
-    updateHistory()
-})
+    }loginStart()
+})       
 
 app.post("/register", (req, res) => {
     async function registerUser(){
@@ -272,8 +284,17 @@ app.post("/register", (req, res) => {
     registerUser()
 })
 
-//NOT USED RIGHT NOW
+app.post("/signout", (req,res) => {
+    req.logout()
+    return res.json("Successfully Logged Out");
+})        
 
+
+*/
+
+
+//NOT USED RIGHT NOW
+/*
 //Call for local (server-side) image files, pictures/photos - Not used
 app.post('/localimagephoto', (req, res) => {
     LinkUpload.localImagePhoto(req,res);
@@ -286,3 +307,4 @@ app.post('/localimagedocument', (req, res) => {
 app.post('/imagelinkdocument', (req, res) => {
     LinkUpload.imagelinkdocument(req,res);
 })
+*/

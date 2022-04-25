@@ -1,36 +1,5 @@
-
-const fs = require ('fs');
 const vision = require('@google-cloud/vision');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
-
-
-//for encoding
-var imageFile = fs.readFileSync('../Test-Files/myImage-1647917711417.jpg');
-//defines internal file
-var imageB64 = Buffer.from(imageFile).toString('base64');
-
-//For google API call - Photos Links
-async function imagelinkphoto(req,res) {
-const link = req.body.link;
-console.log("Link is linkl from front end", link);
-console.log("Req body is", req.body);    
-    // Specifies the location of the api endpoint
-    const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
-    // Creates a client
-    const client = new vision.ImageAnnotatorClient(clientOptions);
-    // Performs text detection on the image file
-    try{
-        const [result] = await client.textDetection(`${link}`);
-        const detections = result.textAnnotations;
-        console.log('Text:');
-        detections.forEach(detections => console.log(detections.description));
-        console.log(detections);
-        res.json(detections);
-    } catch(error) {
-        res.status(400).json(`problem with the API`);
-        console.log(error);
-    }
-}
 
 //Route for file upload route - IT WORKS
 const {
@@ -155,8 +124,36 @@ async function linkFilesRoute(req, res, next) {
 }
 
 
+module.exports = {
+    linkFilesRoute
+}
+/* No longer used
+//For google API call - Photos Links
+async function imagelinkphoto(req,res) {
+    const link = req.body.link;
+    console.log("Link is linkl from front end", link);
+    console.log("Req body is", req.body);    
+        // Specifies the location of the api endpoint
+        const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
+        // Creates a client
+        const client = new vision.ImageAnnotatorClient(clientOptions);
+        // Performs text detection on the image file
+        try{
+            const [result] = await client.textDetection(`${link}`);
+            const detections = result.textAnnotations;
+            console.log('Text:');
+            detections.forEach(detections => console.log(detections.description));
+            console.log(detections);
+            res.json(detections);
+        } catch(error) {
+            res.status(400).json(`problem with the API`);
+            console.log(error);
+        }
+    }
+    
+*/
 
-
+/* Not used
 
 //For google API call - Photos Local (saved on device) - Not used
 async function localImagePhoto(req,res) {
@@ -227,11 +224,4 @@ async function imagelinkdocument(req,res) {
         console.log(error);
     }
 }
-
-module.exports = {
-    localImagePhoto,
-    localimagedocument,
-    imagelinkphoto,
-    imagelinkdocument,
-    linkFilesRoute
-}
+*/
