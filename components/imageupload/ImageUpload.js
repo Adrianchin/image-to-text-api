@@ -162,7 +162,7 @@ async function uploadFilesRoute(req, res, next) {
     }
     await tokenizeText()
 
-    requestData.imageURL = `http://localhost:3000/getuploadedpicture?imageLocation=/public/uploads/${fname}`
+    requestData.imageURL = `http://localhost:3000/uploads/getuploadedpicture?imageLocation=${fname}`
     
     async function dataForUploadMongo(){
         try{

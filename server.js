@@ -9,6 +9,8 @@ const Tokenizer = require("./components/Tokenizer")
 const ImageUpload = require("./components/imageupload/ImageUpload")
 const LinkUpload = require("./components/linkupload/LinkUpload");
 
+const uploads = require("./routes/uploads")
+
 const {
     createUserLoginData, 
     createApp_Data, 
@@ -28,7 +30,7 @@ const {
     genPassword
 } = require("./components/authutility/AuthenticationTools");
 
-
+const port = process.env.port || 3000;
 //const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
 //const client = new MongoClient(uri);
 
@@ -68,7 +70,7 @@ app.use(session({
         collectionName:"sessions"
     }),
     cookie: {
-        maxAge: 1000*60*60*24*7 //equals 1 day (1day*24hr*60min*60sec*1000ms)
+        maxAge: 1000*60*60*24*7 //equals 1 week (7days*1day*24hr*60min*60sec*1000ms)
     }
 }))
 
@@ -80,10 +82,12 @@ require("./passportconfig/Passport")
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.listen(3000, ()=> {
+app.listen(port, ()=> {
     console.log('app is running on port 3000')
 })
 
+
+app.use("/uploads",isAuth, uploads)
 
 
 //Calls for image from provided link
@@ -106,17 +110,21 @@ app.post("/upload", isAuth, ImageUpload.upload.single("myImage"), ImageUpload.up
 //TEST FOR ALL AT ONCE
 app.post("/uploadTest", ImageUpload.upload.single("myImage"), ImageUpload.uploadFilesRoute);
 
+/* moved to uploads
 //API call for location of local saved picture to return to front end
 app.get('/getuploadedpicture', isAuth, (req, res) => {
     //console.log("local direct", req.query.imageLocation);
     let localdir=req.query.imageLocation;
-    return res.sendFile(__dirname+localdir);
+    return res.sendFile(`${__dirname}`+localdir);
 })
 
+*/
+/*Moved to routes
 //API call to tokenizer
 app.post("/tokenizetext", isAuth, (req, res) => {
     Tokenizer.tokenizeText(req,res);
 })
+*/
 
 app.put("/postdata", isAuth, (req, res) => {
     //console.log("This is the post data", req.body)
@@ -137,6 +145,7 @@ app.put("/postdata", isAuth, (req, res) => {
                 linkImagePath:dataForUpload.linkImagePath,
                 date:dataForUpload.date,
                 imageFileName:dataForUpload.imageFileName,
+                notes:dataForUpload.notes,
             })
             //console.log(result)
             return res.json("Successfully Uploaded to DB: ");
