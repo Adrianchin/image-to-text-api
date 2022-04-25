@@ -8,9 +8,9 @@ const {promisify} = require("util")
 const unlinkAsync = promisify(fs.unlink)
 
 const Tokenizer = require("../components/Tokenizer")
-const ImageUpload = require("../components/imageupload/ImageUpload")
+const ImageUpload = require("../components/ImageUpload")
 const TextTranslation = require("../components/TextTranslation")
-const LinkUpload = require("../components/linkupload/LinkUpload");
+const LinkUpload = require("../components/LinkUpload");
 
 const {
     updateDocumentFields,
@@ -18,17 +18,6 @@ const {
 } = require("../db/Models");
 const {ObjectId} = require("mongodb");
 
-/*
-//Calls for image from provided link
-router.post('/imagelinkphoto', (req, res) => {
-    LinkUpload.imagelinkphoto(req,res);
-})
-
-//API call for uploaded image from user. Saves image locally and send image to Google api.
-router.post("/upload", ImageUpload.upload.single("myImage"), ImageUpload.uploadFiles);
-
-//API call for location of local saved picture to return to front end
-*/
 
 router.post('/linkupload', (req, res,next) => {
     LinkUpload.linkFilesRoute(req,res,next);

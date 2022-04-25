@@ -26,7 +26,7 @@ const upload = multer({storage: storage})
 //Route for file upload route - IT WORKS
 const {
     createApp_Data, 
-} = require("../../db/Models");
+} = require("../db/Models");
 
 async function uploadFilesRoute(req, res, next) {
     //console.log(req.body);

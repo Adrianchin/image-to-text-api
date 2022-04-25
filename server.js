@@ -2,36 +2,8 @@ const express = require('express');
 const cors = require ('cors');
 const app = express();
 
-/* Moved to routes
-const {ObjectId} = require("mongodb");
-const fs = require("fs");
-
-const TextTranslation = require("./components/TextTranslation")
-const Tokenizer = require("./components/Tokenizer")
-const ImageUpload = require("./components/imageupload/ImageUpload")
-const LinkUpload = require("./components/linkupload/LinkUpload");
-*/
-
 const Uploads = require("./routes/Uploads")
 const Users = require("./routes/Users")
-
-/* Moved to routes
-const {
-    createUserLoginData, 
-    createApp_Data, 
-    findProfileDataById,
-    deleteDocumentByID,
-    updateDocumentFields,
-    searchForUsername,
-    searchForEmail,
-    UserLoginData,
-} = require("./db/Models");
-
-const {
-    genPassword
-} = require("./components/authutility/AuthenticationTools");
-
-*/
 
 const {
     isAuth
@@ -39,16 +11,13 @@ const {
 
 
 const port = process.env.port || 3000;
-//const uri = "mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/myFirstDatabase?retryWrites=true&w=majority";
-//const client = new MongoClient(uri);
 
-//Import the mongoose module;
+//Import the mongoose module for sessions;
 const session = require("express-session");//required for passport sessions to be attached to
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
 //Set up default mongoose connection
 const mongoDB="mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/profile_information";
-//const dbName ="profile_information"
 mongoose.connect(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true})
 //Get the default connection
 const db = mongoose.connection;
@@ -58,7 +27,6 @@ db.once("open", function(){
     console.log("Connected with Mongoose Successfully!");
 });
 
-//const connectionSession = mongoose.createConnection(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true})  
 
 var corsOptions = {
     origin: 'http://localhost:3001',
@@ -97,6 +65,12 @@ app.listen(port, ()=> {
 
 app.use("/uploads",isAuth, Uploads)
 app.use("/users", Users)
+
+
+
+
+
+
 
 /*Not Used, Combined
 //Calls for image from provided link

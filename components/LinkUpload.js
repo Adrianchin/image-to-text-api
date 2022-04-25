@@ -4,7 +4,7 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 //Route for file upload route - IT WORKS
 const {
     createApp_Data, 
-} = require("../../db/Models");
+} = require("../db/Models");
 
 async function linkFilesRoute(req, res, next) {
 
