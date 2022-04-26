@@ -66,9 +66,6 @@ const rawImageBoxSchema = new mongoose.Schema({
 })
 
 const app_dataSchema = new mongoose.Schema({
-    uploadImagePath:{
-        type:Boolean
-    },
     originalImageSize:{
         type: originalImageSizeSchema,
         required: true,
@@ -103,9 +100,6 @@ const app_dataSchema = new mongoose.Schema({
     username:{
         type: String,
         required: true,
-    },
-    linkImagePath:{
-        type: Boolean
     },
     imageFileName:{
         type: String, default: null
