@@ -66,12 +66,6 @@ app.listen(port, ()=> {
 app.use("/uploads",isAuth, Uploads)
 app.use("/users", Users)
 
-
-
-
-
-
-
 /*Not Used, Combined
 //Calls for image from provided link
 app.post('/imagelinkphoto', isAuth, (req, res) => {
