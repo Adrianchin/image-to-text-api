@@ -1,11 +1,14 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
+const tokenizerLocation = "http://localhost:8010";
+const tokenizerPath= "/japanesetoken";
+
 async function tokenizeText(req, res) {
     let text=JSON.stringify({
         text: req.body.text
     })
     try{
-        const response = await fetch('http://localhost:8010/japanesetoken', {
+        const response = await fetch(tokenizerLocation+tokenizerPath, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: text

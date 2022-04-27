@@ -3,30 +3,37 @@ const sizeOf = require("image-size");
 const fs = require ('fs');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
+require('dotenv').config();
+const deepL_auth_key=process.env.DEEPL_AUTH_KEY
+const deepLAPI="https://api-free.deepl.com/v2/translate"
+const tokenizerLocation = "http://localhost:8010";
+const tokenizerPath= "/japanesetoken";
+const getImageURL="http://localhost:3000/uploads/getuploadedpicture?imageLocation="
+const uploadLocation="./public/uploads/";
 
-let fname;//file name, need as global
+const {
+    createApp_Data, 
+} = require("../db/Models");
+
 const path = require("path");
 const multer = require ("multer");
 //multer is used to handle multipart/form-data in node.js
 
+let fname;//file name, need as global
+
 //Note This is used for uploaded pictures (jpeg) to be saved on server and sent to Google
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, './public/uploads')
+        cb(null, uploadLocation)
     },
     filename: function (req, file, cb) {
-        //used to name the files. Right now its based on the field name. If I did original name, may overwrite
+        //used to name the files. Right now its based on the field name. 
         fname = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
         cb(null, fname);
     }
 })
 
 const upload = multer({storage: storage})
-
-//Route for file upload route - IT WORKS
-const {
-    createApp_Data, 
-} = require("../db/Models");
 
 async function uploadFilesRoute(req, res, next) {
     //console.log(req.body);
@@ -45,19 +52,17 @@ async function uploadFilesRoute(req, res, next) {
         notes: "none",
       };
     const client = new vision.ImageAnnotatorClient();
-    //test for upload - needed for encode, duplicate
-    var imageFileUpload = fs.readFileSync(`./public/uploads/${fname}`);
-    //defines internal file - duplicate
+    //test for upload - needed for encode
+    var imageFileUpload = fs.readFileSync(uploadLocation+fname);
+    //defines internal file 
     var imageB64Upload = Buffer.from(imageFileUpload).toString('base64');
     const request = {
         image: {
             content: Buffer.from(imageB64Upload, 'base64')
         }
     };  
-    requestData.originalImageSize = sizeOf(`./public/uploads/${fname}`);
+    requestData.originalImageSize = sizeOf(uploadLocation+fname);
     requestData.imageFileName = fname;
-    
-    //const pseudoFileLocation=`/public/uploads/${fname}`; //No need for this
 
     async function setEndpoint() {
         try{
@@ -76,13 +81,13 @@ async function uploadFilesRoute(req, res, next) {
         left: requestData.imageInformation[0].boundingPoly.vertices[0].x,
         bottom:
         requestData.originalImageSize.height - requestData.imageInformation[0].boundingPoly.vertices[2].y,
-      };
+    };    
+    //console.log("Image Box Results: ", requestData.rawImageBox)
 
     //Make this into a function from translate text
     async function textForTranslation(){
         try{
-            //REMOVE API KEY later!!!
-            const response = await fetch('https://api-free.deepl.com/v2/translate', {
+            const response = await fetch(deepLAPI, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -90,7 +95,7 @@ async function uploadFilesRoute(req, res, next) {
                 },
                 body: new URLSearchParams({
                     target_lang: 'EN',
-                    auth_key: 'ddec143e-2630-2a52-13fc-191f9cd1a070:fx',
+                    auth_key: deepL_auth_key,
                     text: requestData.imageInformation[0].description
                 })
             })
@@ -109,7 +114,7 @@ async function uploadFilesRoute(req, res, next) {
             text: requestData.imageInformation[0].description
         });
         try{
-            const response = await fetch('http://localhost:8010/japanesetoken', {
+            const response = await fetch(tokenizerLocation+tokenizerPath, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: text
@@ -123,7 +128,7 @@ async function uploadFilesRoute(req, res, next) {
     }
     await tokenizeText()
 
-    requestData.imageURL = `http://localhost:3000/uploads/getuploadedpicture?imageLocation=${fname}`
+    requestData.imageURL = getImageURL+fname
     
     async function dataForUploadMongo(){
         try{
@@ -142,7 +147,7 @@ async function uploadFilesRoute(req, res, next) {
                 imageFileName:requestData.imageFileName,
                 notes:requestData.notes,
             })
-            //console.log(result)
+            //console.log("Upload to Mongo Results: ", result)
         }catch(error) {
             console.log("Error in posting: ", error);
             return res.status(500).send("Problem uploading data" , req.body);
@@ -158,43 +163,3 @@ module.exports = {
     upload,
     uploadFilesRoute
 }
-
-/* No longer used
-function uploadFiles(req, res) {
-    //console.log(req.body);
-    //console.log(req.files);
-
-    const client = new vision.ImageAnnotatorClient();
-
-    //test for upload - needed for encode, duplicate
-    var imageFileUpload = fs.readFileSync(`./public/uploads/${fname}`);
-    //defines internal file - duplicate
-    var imageB64Upload = Buffer.from(imageFileUpload).toString('base64');
-
-    const request = {
-        image: {
-            content: Buffer.from(imageB64Upload, 'base64')
-        }
-    };  
-    //detects image size to google
-    let dimensions = sizeOf(`./public/uploads/${fname}`);
-    
-    async function setEndpoint() {
-        try{
-            //console.log(fname);
-            const [result] = await client.textDetection(request);
-            const detections = result.textAnnotations;
-            detections.push(`/public/uploads/${fname}`);
-            detections.push(dimensions);
-            detections.push(fname);
-            //console.log('Text:');
-            //detections.forEach(text => console.log(text));
-            res.json(detections);
-        } catch(error) {
-            console.log(error);
-            return res.status(500).json(`problem with the Google API`);
-        }
-    }
-    setEndpoint();
-}
-*/

@@ -1,12 +1,15 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
+require('dotenv').config();
+const deepL_auth_key=process.env.DEEPL_AUTH_KEY
+const deepLAPI="https://api-free.deepl.com/v2/translate"
+
 async function fetchTranslationInfo(req, res) {
     const textFromImage = req.body.textFromImage;
     //console.log("This is the text from the Image", textFromImage);
     let textFromDeepL;
     try{
-        //REMOVE API KEY later!!!
-        const response = await fetch('https://api-free.deepl.com/v2/translate', {
+        const response = await fetch(deepLAPI, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -14,7 +17,7 @@ async function fetchTranslationInfo(req, res) {
             },
             body: new URLSearchParams({
                 target_lang: 'EN',
-                auth_key: 'ddec143e-2630-2a52-13fc-191f9cd1a070:fx',
+                auth_key: deepL_auth_key,
                 text: textFromImage
             })
         })

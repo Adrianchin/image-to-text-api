@@ -1,10 +1,15 @@
 const vision = require('@google-cloud/vision');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-//Route for file upload route - IT WORKS
 const {
     createApp_Data, 
 } = require("../db/Models");
+
+require('dotenv').config();
+const deepL_auth_key=process.env.DEEPL_AUTH_KEY
+const deepLAPI="https://api-free.deepl.com/v2/translate"
+const tokenizerLocation = "http://localhost:8010";
+const tokenizerPath= "/japanesetoken";
 
 async function linkFilesRoute(req, res, next) {
 
@@ -25,7 +30,6 @@ async function linkFilesRoute(req, res, next) {
       requestData.imageURL = req.body.link;
       requestData.originalImageSize = req.body.originalImageSize;
 
-    //Test for all calculations in 1 call
     async function imagelinkphoto() {  
         // Specifies the location of the api endpoint
         const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
@@ -48,13 +52,11 @@ async function linkFilesRoute(req, res, next) {
     }
     await imagelinkphoto()
 
-    console.log(requestData.rawImageBox)
+    //console.log("Image Box Results: ", requestData.rawImageBox)
 
-        //Make this into a function from translate text
     async function textForTranslation(){
         try{
-            //REMOVE API KEY later!!!
-            const response = await fetch('https://api-free.deepl.com/v2/translate', {
+            const response = await fetch(deepLAPI, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
@@ -62,7 +64,7 @@ async function linkFilesRoute(req, res, next) {
                 },
                 body: new URLSearchParams({
                     target_lang: 'EN',
-                    auth_key: 'ddec143e-2630-2a52-13fc-191f9cd1a070:fx',
+                    auth_key: deepL_auth_key,
                     text: requestData.imageInformation[0].description
                 })
             })
@@ -81,7 +83,7 @@ async function linkFilesRoute(req, res, next) {
             text: requestData.imageInformation[0].description
         });
         try{
-            const response = await fetch('http://localhost:8010/japanesetoken', {
+            const response = await fetch(tokenizerLocation+tokenizerPath, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: text
@@ -112,7 +114,7 @@ async function linkFilesRoute(req, res, next) {
                 imageFileName:requestData.imageFileName,
                 notes:requestData.notes,
             })
-            //console.log(result)
+            //console.log("Upload to Mongo Results: ", result)
         }catch(error) {
             console.log("Error in posting: ", error);
             return res.status(500).send("Problem uploading data" , req.body);
@@ -127,31 +129,6 @@ async function linkFilesRoute(req, res, next) {
 module.exports = {
     linkFilesRoute
 }
-/* No longer used
-//For google API call - Photos Links
-async function imagelinkphoto(req,res) {
-    const link = req.body.link;
-    console.log("Link is linkl from front end", link);
-    console.log("Req body is", req.body);    
-        // Specifies the location of the api endpoint
-        const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
-        // Creates a client
-        const client = new vision.ImageAnnotatorClient(clientOptions);
-        // Performs text detection on the image file
-        try{
-            const [result] = await client.textDetection(`${link}`);
-            const detections = result.textAnnotations;
-            console.log('Text:');
-            detections.forEach(detections => console.log(detections.description));
-            console.log(detections);
-            res.json(detections);
-        } catch(error) {
-            res.status(400).json(`problem with the API`);
-            console.log(error);
-        }
-    }
-    
-*/
 
 /* Not used
 

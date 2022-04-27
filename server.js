@@ -9,6 +9,8 @@ const {
     isAuth
 } = require("./passportconfig/AuthMiddleware");
 
+require('dotenv').config();
+
 
 const port = process.env.port || 3000;
 
@@ -37,8 +39,10 @@ app.use(cors(corsOptions))
 app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
+const secret = process.env.SESSION_SECRET;
+
 app.use(session({
-    secret: "some secret",//this is a hash used to verify cookie
+    secret: secret,//this is a hash used to verify cookie
     resave: false,
     saveUninitialized: true,
     store: MongoStore.create({
@@ -59,207 +63,12 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.listen(port, ()=> {
-    console.log('app is running on port 3000')
+    console.log(`app is running on port ${port}`)
 })
 
 
 app.use("/uploads",isAuth, Uploads)
 app.use("/users", Users)
-
-/*Not Used, Combined
-//Calls for image from provided link
-app.post('/imagelinkphoto', isAuth, (req, res) => {
-    LinkUpload.imagelinkphoto(req,res);
-})
-
-//API call for uploaded image from user. Saves image locally and send image to Google api.
-app.post("/upload", isAuth, ImageUpload.upload.single("myImage"), ImageUpload.uploadFiles);
-
-//This is no longer used
-app.put("/postdata", isAuth, (req, res) => {
-    //console.log("This is the post data", req.body)
-    async function dataForUploadMongo(){
-        const dataForUpload=req.body;
-        console.log(req.body.originalImageSize)
-        try{
-            const result = await createApp_Data({
-                uploadImagePath:dataForUpload.uploadImagePath,
-                originalImageSize:dataForUpload.originalImageSize,
-                imageInformation:dataForUpload.imageInformation,
-                imageURL:dataForUpload.imageURL,
-                rawImageBox:dataForUpload.rawImageBox,
-                translatedText:dataForUpload.translatedText,
-                tokenizedText:dataForUpload.tokenizedText,
-                id:req.session.passport.user.id, //taken from cookie
-                username:req.session.passport.user.username, //taken from cookie
-                linkImagePath:dataForUpload.linkImagePath,
-                date:dataForUpload.date,
-                imageFileName:dataForUpload.imageFileName,
-                notes:dataForUpload.notes,
-            })
-            //console.log(result)
-            return res.json("Successfully Uploaded to DB: ");
-        }catch(error) {
-            console.log("Error in postdata: ", error);
-            return res.status(500).send("Problem uploading data" , req.body);
-        }
-    }
-    dataForUploadMongo();
-})
-
-*/
-
-
-
-/* Moved to routes
-
-app.post('/imagelinkphototest', isAuth, (req, res,next) => {
-    LinkUpload.linkFilesRoute(req,res,next);
-})
-
-
-//API call for translated text DeepL
-app.post("/textfortranslation", isAuth, (req, res) => {
-TextTranslation.fetchTranslationInfo(req,res)
-})
-
-//TEST FOR ALL AT ONCE
-app.post("/uploadTest", ImageUpload.upload.single("myImage"), ImageUpload.uploadFilesRoute);
-
-//API call for location of local saved picture to return to front end
-app.get('/getuploadedpicture', isAuth, (req, res) => {
-    //console.log("local direct", req.query.imageLocation);
-    let localdir=req.query.imageLocation;
-    return res.sendFile(`${__dirname}`+localdir);
-})
-
-//API call to tokenizer
-app.post("/tokenizetext", isAuth, (req, res) => {
-    Tokenizer.tokenizeText(req,res);
-})
-
-
-app.post("/updatehistory", isAuth, (req, res) => {
-    async function updateHistory(){
-        const idOfDocument = new ObjectId(req.body._id); //unique id of document
-        const translatedText = req.body.translatedText;
-        const tokenizedText = req.body.tokenizedText;
-        const date = req.body.date;
-        try{
-            const responseUpdateDocumentFields = await updateDocumentFields(idOfDocument, date, translatedText, tokenizedText)
-            return res.json(responseUpdateDocumentFields);
-        }catch(error){
-            console.log("Error updatehistory: ", error);
-            return res.status(500).send("Problem updating data" , req.body);
-        }
-    }
-    updateHistory()
-})
-
-//For delete image
-const {promisify} = require("util")
-const unlinkAsync = promisify(fs.unlink)
-
-app.post("/deletedocument", isAuth, (req, res) => {
-    
-    async function deleteDocument(){
-        const documentIDForDelete=new ObjectId(req.body.data._id); //unique id of document
-        const imageFileForDelete = req.body.data.imageFileName
-        try{
-            const returnDocumentDeleted = await deleteDocumentByID(documentIDForDelete);
-            console.log(returnDocumentDeleted)
-            if (imageFileForDelete != null){
-                await unlinkAsync(`./public/uploads/${imageFileForDelete}`)
-                return res.json("Deleted uploaded file and profile data: ")
-            }
-            return res.json(returnDocumentDeleted);
-        }catch (error){
-            console.log("Error in deletedocument: ",error);
-            return res.status(500).send("Problem deleting data" , req.body);
-        }
-    }
-    deleteDocument()
-})
-
-*/
-/* Moved to Users
-
-app.get("/getProfileData", isAuth, (req,res) => {
-    async function fetchProfileData(){
-        const userID = req.session.passport.user.id;
-        try{
-            let profileCardData = await findProfileDataById(userID);
-            return res.json(profileCardData);
-        }catch (error) {
-            console.log("Error getpersonaldata: ", error);
-            return res.status(500).send("Problem getting data" );
-        }
-    }
-    fetchProfileData();
-})
-
-app.post("/signin", passport.authenticate('local'), function(req, res) {//May remove the return of profile data other than the array, as i am using cookies right now
-    async function loginStart(){
-        const loginSubmission = req.body;
-        try{
-            let returnedUserInformation = await UserLoginData.findOne({loweCaseUsername:loginSubmission.username.toLowerCase(),}).select({username:1,email:1}).lean();
-            let placeholder = await findProfileDataById(returnedUserInformation._id);
-            returnedUserInformation["profile"]=placeholder;
-            return res.json(returnedUserInformation);
-        }catch (error) {
-            console.log("Error in signin: ",error);
-            return res.status(401).send("Problem signing in");
-        }
-    }loginStart()
-})       
-
-app.post("/register", (req, res) => {
-    async function registerUser(){
-        const loginSubmission = req.body;
-        const saltHash = genPassword(loginSubmission.password);
-        const salt = saltHash.salt;
-        const hash = saltHash.hash;
-        try{
-            //Tests for if username or email exists
-            let testForUsername = await searchForUsername(loginSubmission.username.toLowerCase());
-            let testForEmail = await searchForEmail(loginSubmission.email.toLowerCase());
-
-            if(!loginSubmission.username || !loginSubmission.email || !loginSubmission.password ){
-                console.log("test empty")
-                return res.status(401).json('incorrect form submission')
-            }else if(testForUsername != null){
-                console.log("test Username")
-                return res.status(401).json('Username already exists')
-            }else if(testForEmail != null){
-                console.log("test Email")
-                return res.status(401).json('Email already exists')
-            }else {
-                const responseCreateUserLoginData = await createUserLoginData({
-                    username:loginSubmission.username,
-                    lowerCaseUsername:loginSubmission.username.toLowerCase(),
-                    email:loginSubmission.email,
-                    lowerCaseEmail:loginSubmission.email.toLowerCase(),
-                    salt:salt,
-                    hash:hash,
-                });
-                return res.json(responseCreateUserLoginData)
-                } 
-        }catch (error) {
-            console.log("Error in register: ", error);
-            return res.status(500).send("Problem registering" , req.body);
-        }
-    }
-    registerUser()
-})
-
-app.post("/signout", (req,res) => {
-    req.logout()
-    return res.json("Successfully Logged Out");
-})        
-
-
-*/
-
 
 //NOT USED RIGHT NOW
 /*
@@ -275,4 +84,76 @@ app.post('/localimagedocument', (req, res) => {
 app.post('/imagelinkdocument', (req, res) => {
     LinkUpload.imagelinkdocument(req,res);
 })
+
+Associated code for calls
+
+//For google API call - Photos Local (saved on device) - Not used
+async function localImagePhoto(req,res) {
+const link = req.body.link;
+console.log("Link is linkl from front end", link);
+// Creates a client
+const client = new vision.ImageAnnotatorClient();
+const request = {
+    image: {
+        content: Buffer.from(imageB64, 'base64')
+    }
+}; 
+try{   
+    const [result] = await client.textDetection(request);
+    const detections = result.textAnnotations;
+    console.log('Text:');
+    detections.forEach(text => console.log(text));
+    res.json(detections);
+} catch(error) {
+    res.status(400).json(`problem with the API`);
+    console.log(error);
+}
+}
+
+//For google API call - Documents Local (saved on device) - Not used
+async function localimagedocument(req,res) {
+const link = req.body.link;
+console.log("Link is linkl from front end", link);
+// Creates a client
+const client = new vision.ImageAnnotatorClient();
+const request = {
+    image: {
+        content: Buffer.from(imageB64, 'base64')
+    }
+};
+try{
+    const [result] = await client.documentTextDetection(request);
+    const detections = result.textAnnotations;
+    console.log('Text:');
+    detections.forEach(text => console.log(text));
+    res.json(detections);
+} catch(error) {
+    res.status(400).json(`problem with the API`);
+    console.log(error);
+}
+}
+
+
+//For google API call - Document Links - Not used
+async function imagelinkdocument(req,res) {    
+    const link = req.body.link;
+    console.log("Link is linkl from front end", link);
+    console.log("Req body is", req.body);
+    // Specifies the location of the api endpoint
+    const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
+    // Creates a client
+    const client = new vision.ImageAnnotatorClient(clientOptions);
+    // Performs text detection on the image file
+    try{
+        const [result] = await client.documentTextDetection(`${link}`);
+        const detections = result.textAnnotations;
+        console.log('Text:');
+        detections.forEach(detections => console.log(detections.description));
+        console.log(detections);
+        res.json(detections);
+    } catch(error) {
+        res.status(400).json(`problem with the API`);
+        console.log(error);
+    }
+}
 */

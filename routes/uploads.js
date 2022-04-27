@@ -7,16 +7,19 @@ const fs = require("fs");
 const {promisify} = require("util")
 const unlinkAsync = promisify(fs.unlink)
 
-const Tokenizer = require("../components/Tokenizer")
-const ImageUpload = require("../components/ImageUpload")
-const TextTranslation = require("../components/TextTranslation")
-const LinkUpload = require("../components/LinkUpload");
-
 const {
     updateDocumentFields,
     deleteDocumentByID,
 } = require("../db/Models");
 const {ObjectId} = require("mongodb");
+
+const Tokenizer = require("../components/Tokenizer")
+const ImageUpload = require("../components/ImageUpload")
+const TextTranslation = require("../components/TextTranslation")
+const LinkUpload = require("../components/LinkUpload");
+
+const uploadLocation="./public/uploads/";
+const directoryUpload="public/uploads/";
 
 
 router.post('/linkupload', (req, res,next) => {
@@ -30,7 +33,7 @@ router.post("/textfortranslation", (req, res) => {
 
 router.get('/getuploadedpicture', (req, res) => {
     let imageName=req.query.imageLocation;
-    return res.sendFile(path.join(__dirname, '..', 'public/uploads/', imageName));
+    return res.sendFile(path.join(__dirname, '..', directoryUpload, imageName));
 })
 
 
@@ -70,7 +73,7 @@ router.post("/deletedocument", (req, res) => {
             const returnDocumentDeleted = await deleteDocumentByID(documentIDForDelete);
             console.log(returnDocumentDeleted)
             if (imageFileForDelete != null){
-                await unlinkAsync(`./public/uploads/${imageFileForDelete}`)
+                await unlinkAsync(uploadLocation+imageFileForDelete)
                 return res.json("Deleted uploaded file and profile data: ")
             }
             return res.json(returnDocumentDeleted);
