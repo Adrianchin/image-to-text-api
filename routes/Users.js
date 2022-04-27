@@ -1,6 +1,5 @@
 const express = require("express")
 let router = express.Router();
-const path = require('path');
 
 const {
     createUserLoginData, 
