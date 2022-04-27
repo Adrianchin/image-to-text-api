@@ -18,8 +18,7 @@ async function tokenizeText(req, res) {
 
         res.json(tokenizedResponse);
     } catch(error){
-        res.status(400).json(`problem with the API`);
-        console.log(error);
+        return res.status(422).send("Problem with tokenizer, check input");
     }
 }
 

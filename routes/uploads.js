@@ -54,7 +54,7 @@ router.post("/updatehistory", (req, res) => {
         try{
             const responseUpdateDocumentFields = await updateDocumentFields(idOfDocument, date, translatedText, tokenizedText)
             //console.log(responseUpdateDocumentFields)
-            return res.json(responseUpdateDocumentFields);
+            return res.json("Updated data!");
         }catch(error){
             console.log("Error updatehistory: ", error);
             return res.status(500).send("Problem updating data" , req.body);
@@ -71,12 +71,12 @@ router.post("/deletedocument", (req, res) => {
         const imageFileForDelete = req.body.data.imageFileName
         try{
             const returnDocumentDeleted = await deleteDocumentByID(documentIDForDelete);
-            console.log(returnDocumentDeleted)
+            //console.log(returnDocumentDeleted)
             if (imageFileForDelete != null){
                 await unlinkAsync(uploadLocation+imageFileForDelete)
-                return res.json("Deleted uploaded file and profile data: ")
+                return res.json("Deleted saved image and data!")
             }
-            return res.json(returnDocumentDeleted);
+            return res.json("Deleted data!");
         }catch (error){
             console.log("Error in deletedocument: ",error);
             return res.status(500).send("Problem deleting data" , req.body);
