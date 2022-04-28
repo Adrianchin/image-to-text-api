@@ -13,13 +13,14 @@ require('dotenv').config();
 
 
 const port = process.env.port || 3000;
+const mongoDBInformation = process.env.MONGODB_INFORMATION
 
 //Import the mongoose module for sessions;
 const session = require("express-session");//required for passport sessions to be attached to
 const mongoose = require('mongoose');
 const MongoStore = require('connect-mongo');
 //Set up default mongoose connection
-const mongoDB="mongodb+srv://Adrian:Adrian1993@cluster0.jajtv.mongodb.net/profile_information";
+const mongoDB=mongoDBInformation;
 mongoose.connect(mongoDB, {useNewUrlParser: true, useUnifiedTopology: true})
 //Get the default connection
 const db = mongoose.connection;
