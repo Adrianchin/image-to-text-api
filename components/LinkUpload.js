@@ -11,6 +11,13 @@ const deepLAPI="https://api-free.deepl.com/v2/translate"
 const tokenizerLocation = "http://localhost:8010";
 const tokenizerPath= "/japanesetoken";
 
+var config = {credentials:
+    {
+        client_email:process.env.GOOGLE_API_EMAIL,
+        private_key:process.env.GOOGLE_API_KEY,
+    }
+};
+
 async function linkFilesRoute(req, res, next) {
 
     const requestData = {
@@ -34,7 +41,7 @@ async function linkFilesRoute(req, res, next) {
         // Specifies the location of the api endpoint
         const clientOptions = {apiEndpoint: 'eu-vision.googleapis.com'};
         // Creates a client
-        const client = new vision.ImageAnnotatorClient(clientOptions);
+        const client = new vision.ImageAnnotatorClient(config, clientOptions);
         // Performs text detection on the image file
         try{
             const [result] = await client.textDetection(`${requestData.imageURL}`);

@@ -11,6 +11,13 @@ const tokenizerPath= "/japanesetoken";
 const getImageURL="http://localhost:3000/uploads/getuploadedpicture?imageLocation="
 const uploadLocation="./public/uploads/";
 
+var config = {credentials:
+    {
+        client_email:process.env.GOOGLE_API_EMAIL,
+        private_key:process.env.GOOGLE_API_KEY,
+    }
+};
+
 const {
     createApp_Data, 
 } = require("../db/Models");
@@ -51,7 +58,7 @@ async function uploadFilesRoute(req, res, next) {
         imageFileName: null,//
         notes: "none",
       };
-    const client = new vision.ImageAnnotatorClient();
+    const client = new vision.ImageAnnotatorClient(config);
     //test for upload - needed for encode
     var imageFileUpload = fs.readFileSync(uploadLocation+fname);
     //defines internal file 
@@ -63,11 +70,12 @@ async function uploadFilesRoute(req, res, next) {
     };  
     requestData.originalImageSize = sizeOf(uploadLocation+fname);
     requestData.imageFileName = fname;
-
+   
     async function setEndpoint() {
         try{
             const [result] = await client.textDetection(request);
             requestData.imageInformation = result.textAnnotations;
+            console.log(result)
         } catch(error) {
             console.log(error);
             return res.status(500).json(`problem with the Google API`);
