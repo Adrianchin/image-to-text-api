@@ -77,7 +77,7 @@ async function uploadFilesRoute(req, res, next) {
         try{
             const [result] = await client.textDetection(request);
             requestData.imageInformation = result.textAnnotations;
-            console.log(result)
+            //console.log(result)
         } catch(error) {
             console.log(error);
             return res.status(500).json(`problem with the Google API`);
