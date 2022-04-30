@@ -6,17 +6,21 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 require('dotenv').config();
 const deepL_auth_key=process.env.DEEPL_AUTH_KEY
 const deepLAPI="https://api-free.deepl.com/v2/translate"
-const tokenizerLocation = "http://localhost:8010";
+const tokenizerLocation = process.env.TOKENIZER_URL;
 const tokenizerPath= "/japanesetoken";
-const getImageURL="http://localhost:3000/uploads/getuploadedpicture?imageLocation="
+const serverLocation=process.env.SERVER_LOCATION;
+const imageStored="/uploads/getuploadedpicture?imageLocation="
+const getImageURL=serverLocation+imageStored;
 const uploadLocation="./public/uploads/";
 
 var config = {credentials:
     {
         client_email:process.env.GOOGLE_API_EMAIL,
-        private_key:process.env.GOOGLE_API_KEY,
+        private_key:Buffer.from(process.env.GOOGLE_API_KEY, 'base64').toString('ascii'),
     }
 };
+
+console.log(config.credentials)
 
 const {
     createApp_Data, 

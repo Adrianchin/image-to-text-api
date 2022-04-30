@@ -14,6 +14,7 @@ require('dotenv').config();
 
 const port = process.env.port || 3000;
 const mongoDBInformation = process.env.MONGODB_INFORMATION
+console.log("MongoDB Path: ", mongoDBInformation)
 
 //Import the mongoose module for sessions;
 const session = require("express-session");//required for passport sessions to be attached to
@@ -32,7 +33,7 @@ db.once("open", function(){
 
 
 var corsOptions = {
-    origin: 'http://localhost:3001',
+    origin: process.env.FRONT_END_URL,
     credentials:  true
   }
 

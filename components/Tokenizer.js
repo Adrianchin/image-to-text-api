@@ -1,6 +1,6 @@
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
-const tokenizerLocation = "http://localhost:8010";
+const tokenizerLocation = process.env.TOKENIZER_URL;
 const tokenizerPath= "/japanesetoken";
 
 async function tokenizeText(req, res) {
