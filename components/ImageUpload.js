@@ -20,8 +20,6 @@ var config = {credentials:
     }
 };
 
-console.log(config.credentials)
-
 const {
     createApp_Data, 
 } = require("../db/Models");
