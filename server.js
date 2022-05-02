@@ -12,7 +12,7 @@ const {
 require('dotenv').config();
 
 
-const port = process.env.port || 3000;
+const port = process.env.port || 3001;
 const mongoDBInformation = process.env.MONGODB_INFORMATION
 console.log("MongoDB Path: ", mongoDBInformation)
 
