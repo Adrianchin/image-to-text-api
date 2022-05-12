@@ -37,8 +37,7 @@ router.get('/getuploadedpicture', (req, res) => {
 })
 
 
-router.post("/uploadimage", ImageUpload.upload.single("myImage"), ImageUpload.uploadFilesRoute);
-
+router.post("/uploadimage", ImageUpload.upload.single("myImage"),ImageUpload.resizeImage, ImageUpload.uploadFilesRoute)
 
 //API call to tokenizer
 router.post("/tokenizetext", (req, res) => {

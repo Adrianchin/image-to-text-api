@@ -2,6 +2,7 @@ const vision = require('@google-cloud/vision');
 const sizeOf = require("image-size");
 const fs = require ('fs');
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
+const sharp = require("sharp");
 
 require('dotenv').config();
 const deepL_auth_key=process.env.DEEPL_AUTH_KEY
@@ -9,9 +10,13 @@ const deepLAPI="https://api-free.deepl.com/v2/translate"
 const tokenizerLocation = process.env.TOKENIZER_URL;
 const tokenizerPath= "/japanesetoken";
 const serverLocation=process.env.SERVER_LOCATION;
-const imageStored="/uploads/getuploadedpicture?imageLocation="
-const getImageURL=serverLocation+imageStored;
+const imageStored="/uploads/getuploadedpicture?imageLocation="//Location for the local stored image
+const getImageURL=serverLocation+imageStored;//local image storage + request location
 const uploadLocation="./public/uploads/";
+const rawImageLocation="./public/rawimages/";//need to create second volume
+
+const widthLimit = 750; // limit to width in pixles
+const heightLimit = 750; //limit to height in pixles
 
 var config = {credentials:
     {
@@ -29,24 +34,66 @@ const multer = require ("multer");
 //multer is used to handle multipart/form-data in node.js
 
 let fname;//file name, need as global
+let fnamenew;
 
 //Note This is used for uploaded pictures (jpeg) to be saved on server and sent to Google
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, uploadLocation)
+        cb(null, rawImageLocation)
     },
     filename: function (req, file, cb) {
         //used to name the files. Right now its based on the field name. 
-        fname = file.fieldname + '-' + Date.now() + path.extname(file.originalname)
+        fname = file.fieldname + '-' + Date.now() + path.extname(file.originalname)//used for orig image
+        fnamenew = file.fieldname + '-' + Date.now() + ".jpg"//for jpg type.
         cb(null, fname);
     }
 })
 
 const upload = multer({storage: storage})
 
+async function resizeImage( req, res, next) {//Resize for large images, used for phone
+    let imageFileToResize = rawImageLocation+fname;//raw image location
+    let imageFileResized = uploadLocation+fnamenew;//resized image location (to be made)
+    try{
+        const imageMetadata=await sharp(imageFileToResize).metadata();//calculates raw image information
+        console.log("Raw Metadata Information: ", imageMetadata);
+        if (imageMetadata.width > widthLimit){//if raw image width is larger than limit, resize
+            let result = await sharp(imageFileToResize)
+            .resize({
+                width: widthLimit
+            })
+            .toFormat("jpeg", {mozjpeg:true})
+            .toFile(imageFileResized);
+
+            console.log(`Width exceeds ${widthLimit} pixels `, result);
+        }else if(imageMetadata.height > heightLimit){//if raw image height is larger than limit, resize
+            let result = await sharp(imageFileToResize)
+            .resize({
+                width: heightLimit
+            })
+            .toFormat("jpeg", {mozjpeg:true})
+            .toFile(imageFileResized)
+
+            console.log(`height exceeds ${heightLimit} pixels `, result);
+        }else{
+            let result = await sharp(imageFileToResize)
+            .toFormat("jpeg", {mozjpeg:true})
+            .toFile(imageFileResized);
+
+            console.log(`Image is within limits, saved to upload location `, result);
+        }
+
+        fs.unlinkSync(imageFileToResize);//Deletes raw image
+        console.log("Raw Image Deleted");
+        fname=fnamenew;
+        next(null)
+    }catch(error){
+        return res.status(500).json(`problem with image upload, please try a different image`)
+    }
+}
+
 async function uploadFilesRoute(req, res, next) {
-    //console.log(req.body);
-    //console.log(req.files);
+
     const requestData = {
         linkImagePath: false,//
         uploadImagePath: true,//
@@ -138,6 +185,7 @@ async function uploadFilesRoute(req, res, next) {
     }
     await tokenizeText()
 
+    //Adda image URL location for request
     requestData.imageURL = getImageURL+fname
     
     async function dataForUploadMongo(){
@@ -171,5 +219,6 @@ async function uploadFilesRoute(req, res, next) {
 
 module.exports = {
     upload,
-    uploadFilesRoute
+    uploadFilesRoute,
+    resizeImage
 }
