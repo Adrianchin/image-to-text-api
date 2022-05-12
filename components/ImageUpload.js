@@ -56,7 +56,6 @@ async function resizeImage( req, res, next) {//Resize for large images, used for
     let imageFileResized = uploadLocation+fnamenew;//resized image location (to be made)
     try{
         const imageMetadata=await sharp(imageFileToResize).metadata();//calculates raw image information
-        console.log("Raw Metadata Information: ", imageMetadata);
         if (imageMetadata.width > widthLimit){//if raw image width is larger than limit, resize
             let result = await sharp(imageFileToResize)
             .resize({
@@ -64,7 +63,7 @@ async function resizeImage( req, res, next) {//Resize for large images, used for
             })
             .toFormat("jpeg", {mozjpeg:true})
             .toFile(imageFileResized);
-
+            
             console.log(`Width exceeds ${widthLimit} pixels `, result);
         }else if(imageMetadata.height > heightLimit){//if raw image height is larger than limit, resize
             let result = await sharp(imageFileToResize)
